@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <!--
-      HKMultiplayer: mod cooperativo para Hollow Knight 1.5.12620 (Unity 6) sobre la Modding API.
+      HKMultiplayer: mod cooperativo para Hollow Knight 1.5.68.11808 (Unity 2020.2.2f1) sobre la Modding API.
       El transporte (carpeta Net) no depende de Unity y se prueba también fuera del juego (tests/NetTests).
     -->
     <PropertyGroup>
@@ -13,7 +13,7 @@
         <!-- Referencias para compilar: juego + Modding API (carpeta lib, solo local) -->
         <References>$(MSBuildProjectDirectory)\..\..\lib</References>
         <OutputDirectory>$(MSBuildProjectDirectory)\..\..\out\HKMultiplayer</OutputDirectory>
-        <!-- Unity 6: compilar contra el mscorlib/System del juego -->
+        <!-- Unity 2020.2: compilar contra el mscorlib/System del juego y la Modding API -->
         <FrameworkPathOverride>$(References)</FrameworkPathOverride>
         <PathMap Condition="'$(Configuration)' == 'Release'">$(MSBuildProjectDirectory)=source</PathMap>
         <!-- Sin el mapa de SourceLink en el .pdb: guardaría la ruta local de la carpeta del repositorio. Los números de
@@ -24,9 +24,9 @@
 
     <ItemGroup>
         <Reference Include="$(References)\Assembly-CSharp.dll" Private="False" />
-        <!-- El Steamworks.NET del juego (Steam: salas y conexión sin abrir puertos). La versión de GOG no lo trae:
-             SteamLink lo carga aparte y, si falta, la conexión es solo por IP -->
-        <Reference Include="$(References)\com.rlabrecque.steamworks.net.dll" Private="False" />
+        <!-- El Steamworks.NET del juego viene en Assembly-CSharp-firstpass (Steam: salas y conexión sin abrir puertos).
+             La versión de GOG no lo trae: SteamLink lo carga aparte y, si falta, la conexión es solo por IP -->
+        <Reference Include="$(References)\Assembly-CSharp-firstpass.dll" Private="False" />
         <Reference Include="$(References)\MMHOOK_Assembly-CSharp.dll" Private="False" />
         <Reference Include="$(References)\MMHOOK_PlayMaker.dll" Private="False" />
         <Reference Include="$(References)\MonoMod.RuntimeDetour.dll" Private="False" />
@@ -47,8 +47,6 @@
         <Reference Include="$(References)\UnityEngine.TextRenderingModule.dll" Private="False" />
         <Reference Include="$(References)\UnityEngine.UI.dll" Private="False" />
         <Reference Include="$(References)\UnityEngine.UIModule.dll" Private="False" />
-        <Reference Include="$(References)\TeamCherry.*.dll" Private="False" />
-        <Reference Include="$(References)\MMHOOK_TeamCherry.*.dll" Private="False" />
         <Reference Include="$(References)\netstandard.dll" Private="False" />
         <!-- Primitivas de cifrado (X25519, HKDF, ChaCha20-Poly1305) -->
         <PackageReference Include="BouncyCastle.Cryptography" Version="2.5.1" />

@@ -5,7 +5,7 @@ One player hosts a coop world and their friends join with the host's address and
 you share the world, see each other in real time and fight the same enemies and bosses together.
 
 You need:
-  - Hollow Knight 1.5.12620 on Windows (the current Steam version; the GOG one works too).
+  - Hollow Knight 1.5.68.11808 on Windows (Unity 2020.2.2f1).
     Not Mac or Linux: the package's Modding API is Windows only. The Xbox/Game Pass version is not
     tested and the installer doesn't look for it.
   - Every player must have the SAME version of HKMultiplayer installed.

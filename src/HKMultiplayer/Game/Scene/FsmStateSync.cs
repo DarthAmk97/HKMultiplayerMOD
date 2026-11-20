@@ -918,8 +918,7 @@ internal sealed class FsmStateSync {
 
     private void Scan() {
         var hero = HeroController.instance;
-        foreach (var fsm in UnityEngine.Object.FindObjectsByType<PlayMakerFSM>(FindObjectsInactive.Include,
-                     FindObjectsSortMode.None)) {
+        foreach (var fsm in UnityEngine.Object.FindObjectsOfType<PlayMakerFSM>(true)) {
             // Solo lo de la sala: no lo persistente (DontDestroyOnLoad) ni lo del caballero, como en AddBattleListeners
             if (fsm.gameObject.scene.buildIndex < 0 || hero != null && fsm.transform.IsChildOf(hero.transform)) {
                 continue;
@@ -1013,8 +1012,7 @@ internal sealed class FsmStateSync {
         }
 
         var hero = HeroController.instance;
-        foreach (var fsm in UnityEngine.Object.FindObjectsByType<PlayMakerFSM>(FindObjectsInactive.Include,
-                     FindObjectsSortMode.None)) {
+        foreach (var fsm in UnityEngine.Object.FindObjectsOfType<PlayMakerFSM>(true)) {
             if (_byFsm.ContainsKey(fsm.Fsm) || fsm.gameObject.scene.buildIndex < 0 ||
                 EnemySync.IsEnemyObject(fsm.transform) ||
                 hero != null && fsm.transform.IsChildOf(hero.transform) || !Listens(fsm, events) ||
@@ -2560,7 +2558,7 @@ internal sealed class FsmStateSync {
 
         Vector3? boss = null;
         var best = 40f;
-        foreach (var health in UnityEngine.Object.FindObjectsByType<HealthManager>(FindObjectsSortMode.None)) {
+        foreach (var health in UnityEngine.Object.FindObjectsOfType<HealthManager>()) {
             if (health == null || health.isDead || health.hp < 150 || !health.gameObject.activeInHierarchy) {
                 continue;
             }

@@ -10,7 +10,6 @@ using UnityEngine.SceneManagement;
 using MonoMod.Utils;
 using System.Linq;
 using Newtonsoft.Json.Linq;
-using Lang = TeamCherry.Localization.Language;
 
 // ReSharper disable file UnusedMember.Global
 
@@ -27,11 +26,11 @@ namespace Modding
         private readonly string _globalSettingsPath;
 
         private readonly Type globalSettingsType = null;
-        private readonly FastReflectionHelper.FastInvoker onLoadGlobalSettings;
-        private readonly FastReflectionHelper.FastInvoker onSaveGlobalSettings;
+        private readonly FastReflectionDelegate onLoadGlobalSettings;
+        private readonly FastReflectionDelegate onSaveGlobalSettings;
         private readonly Type saveSettingsType = null;
-        private readonly FastReflectionHelper.FastInvoker onLoadSaveSettings;
-        private readonly FastReflectionHelper.FastInvoker onSaveSaveSettings;
+        private readonly FastReflectionDelegate onLoadSaveSettings;
+        private readonly FastReflectionDelegate onSaveSaveSettings;
 
         /// <summary>
         ///     The Mods Name
@@ -63,10 +62,10 @@ namespace Modding
                     switch (mi.Name)
                     {
                         case nameof(IGlobalSettings<object>.OnLoadGlobal):
-                            this.onLoadGlobalSettings = mi.GetFastInvoker();
+                            this.onLoadGlobalSettings = mi.GetFastDelegate();
                             break;
                         case nameof(IGlobalSettings<object>.OnSaveGlobal):
-                            this.onSaveGlobalSettings = mi.GetFastInvoker();
+                            this.onSaveGlobalSettings = mi.GetFastDelegate();
                             break;
                     }
                 }
@@ -87,10 +86,10 @@ namespace Modding
                     switch (mi.Name)
                     {
                         case nameof(ILocalSettings<object>.OnLoadLocal):
-                            this.onLoadSaveSettings = mi.GetFastInvoker();
+                            this.onLoadSaveSettings = mi.GetFastDelegate();
                             break;
                         case nameof(ILocalSettings<object>.OnSaveLocal):
-                            this.onSaveSaveSettings = mi.GetFastInvoker();
+                            this.onSaveSaveSettings = mi.GetFastDelegate();
                             break;
                     }
                 }
@@ -189,7 +188,7 @@ namespace Modding
         ///     change the text of the button to jump to this mod's menu.
         /// </summary>
         /// <returns></returns>
-        public virtual string GetMenuButtonText() => $"{GetName()} {Lang.Get("MAIN_OPTIONS", "MainMenu")}";
+        public virtual string GetMenuButtonText() => $"{GetName()} {Language.Language.Get("MAIN_OPTIONS", "MainMenu")}";
 
         private void HookSaveMethods()
         {

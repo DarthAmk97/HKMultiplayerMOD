@@ -177,9 +177,9 @@ internal sealed class PartnerGrass {
         }
 
         var layers = 0;
-        layers |= Add(Object.FindObjectsByType<GrassBehaviour>(FindObjectsSortMode.None));
-        layers |= Add(Object.FindObjectsByType<GrassSpriteBehaviour>(FindObjectsSortMode.None));
-        layers |= Add(Object.FindObjectsByType<Grass>(FindObjectsSortMode.None));
+        layers |= Add(Object.FindObjectsOfType<GrassBehaviour>());
+        layers |= Add(Object.FindObjectsOfType<GrassSpriteBehaviour>());
+        layers |= Add(Object.FindObjectsOfType<Grass>());
         _filter = new ContactFilter2D { useTriggers = true, useLayerMask = true, layerMask = layers };
     }
 

@@ -30,7 +30,7 @@ internal static class ReviveAudio {
     private static AudioClip _chargeClip;
     private static AudioClip _healClip;
     private static GameObject _healPlayer;
-    private static VibrationDataAsset _healVibration;
+    private static VibrationData? _healVibration;
     private static float _fade;
 
     /// <summary>Volumen elegido en este PC (0-4, 1 = normal).</summary>
@@ -156,8 +156,8 @@ internal static class ReviveAudio {
             StopCharge();
             PlayHealBurst(hero);
 
-            if (vibrate && _healVibration != null) {
-                VibrationManager.PlayVibrationClipOneShot(_healVibration);
+            if (vibrate && _healVibration.HasValue) {
+                VibrationManager.PlayVibrationClipOneShot(_healVibration.Value, null, false, string.Empty);
             }
 
             if (vibrate) {
@@ -222,8 +222,13 @@ internal static class ReviveAudio {
                 if (action is HutongGames.PlayMaker.Actions.AudioPlayerOneShotSingle { audioClip.Value: AudioClip clip } oneShot) {
                     _healClip = clip;
                     _healPlayer = oneShot.audioPlayer.Value;
-                } else if (action is HutongGames.PlayMaker.Actions.PlayVibrationV2 { vibrationDataAsset.Value: VibrationDataAsset vibration }) {
-                    _healVibration = vibration;
+                } else if (action is global::PlayVibration playVibration) {
+                    var low = playVibration.lowFidelityVibration != null && !playVibration.lowFidelityVibration.IsNone
+                        ? (LowFidelityVibrations) playVibration.lowFidelityVibration.Value
+                        : LowFidelityVibrations.None;
+                    var high = playVibration.highFidelityVibration?.Value as TextAsset;
+                    var gamepad = playVibration.gamepadVibration?.Value as GamepadVibration;
+                    _healVibration = VibrationData.Create(low, high, gamepad);
                 }
             }
         }

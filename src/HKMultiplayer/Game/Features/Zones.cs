@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using GameText = TeamCherry.Localization.Language;
+using GameText = Language.Language;
 
 namespace HKMultiplayer.Game.Features;
 
@@ -9,12 +9,12 @@ internal static class Zones {
 
     private static readonly Dictionary<byte, string> Names = new();
 
-    private static TeamCherry.Localization.LanguageCode _language;
+    private static Language.LanguageCode _language;
 
     public static string Name(byte zone) {
         // Con otro idioma, los nombres se vuelven a pedir (antes se quedaban en el primero que se vio: Clear no lo llamaba
         // nadie)
-        var language = TeamCherry.Localization.Language.CurrentLanguage();
+        var language = Language.Language.CurrentLanguage();
         if (language != _language) {
             _language = language;
             Names.Clear();

@@ -272,7 +272,7 @@ internal sealed class SharedCutscenes {
             _watchers = 1;
             _waitingFor = string.Empty;
             _pendingPull = null;
-            _videoPlayers = UnityEngine.Object.FindObjectsByType<CinematicPlayer>(FindObjectsSortMode.None);
+            _videoPlayers = UnityEngine.Object.FindObjectsOfType<CinematicPlayer>();
             _nextVideoCheck = 0f;
             Log.Info($"Cinemática compartida: {name}{(_pulled ? " (llevado por un compañero)" : string.Empty)}");
             Report(ReportKind.Started, name, _pulled);
@@ -436,7 +436,7 @@ internal sealed class SharedCutscenes {
 
             Log.Info($"Vídeo de {player.name} fuera de la cámara ({position.x:0.0}, {position.y:0.0}): se coloca delante");
             if (PlaceVideoMethod != null) {
-                _placeVideoArgs[0] = ForceCameraAspect.CurrentViewportAspect;
+                _placeVideoArgs[0] = camera.aspect;
                 PlaceVideoMethod.Invoke(player, _placeVideoArgs);
             }
 

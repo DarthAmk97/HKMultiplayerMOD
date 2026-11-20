@@ -60,14 +60,6 @@ namespace Modding.Patches
         ApplyVideoSettings,
         ApplyGameSettings,
         ApplyKeyboardSettings,
-        GoToExtrasMenu,
-        ApplyControllerSettings,
-        GoToExplicitSwitchUser,
-        ReturnToProfileMenu,
-        ApplyAdvancedVideoSettings,
-        ApplyAdvancedControllerSettings,
-
-        // Added for the dynamic menu API
         CustomCancelAction
     }
 }

@@ -22,7 +22,7 @@ namespace Modding.Patches
                 MagnitudeMultiplier = this.MagnitudeMultiplier.Value,
                 MoveAngle = this.MoveAngle.Value,
                 MoveDirection = this.MoveDirection.Value,
-                Multiplier = (this.Multiplier.IsNone ? 1f : this.Multiplier.Value),
+                Multiplier = ((!this.Multiplier.IsNone) ? this.Multiplier.Value : 1f),
                 SpecialType = (SpecialTypes) this.SpecialType.Value,
                 IsExtraDamage = false
             };

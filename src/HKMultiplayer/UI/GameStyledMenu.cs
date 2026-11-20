@@ -568,7 +568,6 @@ internal abstract class GameStyledMenu : MonoBehaviour {
         }
 
         option.menuSetting = null;
-        option.refreshListOnChange = null;
         option.localizeText = false;
         option.optionList = values;
         option.selectedOptionIndex = Mathf.Clamp(index, 0, values.Length - 1);

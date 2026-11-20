@@ -118,7 +118,7 @@ internal sealed class MenderBugSync {
     }
 
     private static PlayMakerFSM FindBug() {
-        foreach (var fsm in Object.FindObjectsByType<PlayMakerFSM>(FindObjectsInactive.Include, FindObjectsSortMode.None)) {
+        foreach (var fsm in Object.FindObjectsOfType<PlayMakerFSM>(true)) {
             if (fsm.FsmName == BugFsm && fsm.gameObject.scene.name == BugScene) {
                 return fsm;
             }

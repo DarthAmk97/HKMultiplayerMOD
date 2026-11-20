@@ -78,7 +78,7 @@ internal sealed class StagTogether {
             _lastState = null;
             _following = false;
             if (scene.Length > 0) {
-                foreach (var fsm in Object.FindObjectsByType<PlayMakerFSM>(FindObjectsSortMode.None)) {
+                foreach (var fsm in Object.FindObjectsOfType<PlayMakerFSM>()) {
                     if (fsm.FsmName == StagFsm && fsm.gameObject.scene.buildIndex >= 0) {
                         _stag = fsm;
                         break;

@@ -13,26 +13,6 @@ namespace Modding.Patches
     public class CameraLockArea : global::CameraLockArea
     {
         [MonoModIgnore]
-        private bool hasGotRefs;
-
-        [MonoModReplace]
-        private void GetRefs()
-        {
-            if (this.hasGotRefs)
-            {
-                return;
-            }
-            this.gcams = Modding.Patches.SuppressPreloadException.GameCameras.instance;
-            if (this.gcams == null)
-            {
-                return;
-            }
-            this.cameraCtrl = this.gcams.cameraController;
-            this.camTarget = this.gcams.cameraTarget;
-            this.hasGotRefs = true;
-        }
-
-        [MonoModIgnore]
         private SuppressPreloadException.GameCameras gcams;
         [MonoModIgnore]
         private CameraController cameraCtrl;
@@ -51,12 +31,13 @@ namespace Modding.Patches
         [MonoModIgnore]
         private extern bool ValidateBounds();
 
-        [MonoModReplace]
         private IEnumerator Start()
         {
-            this.GetRefs();
-            if (!this.hasGotRefs)
+            this.gcams = SuppressPreloadException.GameCameras.instance;
+            if (this.gcams == null)
                 yield break;
+            this.cameraCtrl = this.gcams.cameraController;
+            this.camTarget = this.gcams.cameraTarget;
             Scene scene = this.gameObject.scene;
             if (this.cameraCtrl == null)
                 yield break;

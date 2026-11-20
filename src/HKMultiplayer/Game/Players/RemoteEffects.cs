@@ -724,7 +724,7 @@ internal sealed class RemoteEffects {
 
             var angle = Random.Range(action.angleMin.Value, action.angleMax.Value) * Mathf.Deg2Rad;
             var speed = Random.Range(action.speedMin.Value, action.speedMax.Value);
-            body.linearVelocity = new Vector2(Mathf.Cos(angle) * speed, Mathf.Sin(angle) * speed);
+            body.velocity = new Vector2(Mathf.Cos(angle) * speed, Mathf.Sin(angle) * speed);
         }
     }
 

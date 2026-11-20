@@ -2,8 +2,8 @@
 # Prepara un PC para compilar el mod (lo que no se sube al repositorio porque es del juego o se genera):
 #   1. modding-api/Vanilla: la carpeta Managed del juego SIN modificar (si el juego ya tiene la Modding API, se usan los
 #      originales que guardó el instalador en HKMultiplayer-backup; si no hay, hay que "Verificar integridad" en Steam).
-#   2. modding-api/override/mscorlib.dll: el del juego.
-#   3. Compila la Modding API modificada (modding-api/, para Hollow Knight 1.5.12620) → modding-api/OutputFinal.
+#   2. modding-api/override/mscorlib.{dll,xml}: los de hk-modding/api v77 (Unity 2020.2).
+#   3. Compila la Modding API modificada (modding-api/, para Hollow Knight 1.5.68.11808) → modding-api/OutputFinal.
 #   4. vendor/modding-api/OutputFinal: esa compilación (la usa tools/package.sh para el paquete de jugadores).
 #   5. lib/: Managed del juego + la Modding API compilada (contra esto compila el mod).
 # Uso: bash tools/setup-dev.sh ["C:/ruta/a/Hollow Knight"]   (por defecto, la carpeta de Steam)
@@ -33,7 +33,7 @@ elif [ -d "$BACKUP" ]; then
   find "$MANAGED" -maxdepth 1 -type f -exec cp {} "$API/Vanilla/" \;
   cp -r "$BACKUP/." "$API/Vanilla/"
   # Los que añade la Modding API no son del juego
-  rm -f "$API/Vanilla/"{MMHOOK_,MonoMod.,Mono.Cecil,unityscenerepacker,System.ValueTuple}* "$API/Vanilla/Assembly-CSharp.xml"
+  rm -f "$API/Vanilla/"{MMHOOK_,MonoMod.,Mono.Cecil,unityscenerepacker,System.ValueTuple}* "$API/Vanilla/Assembly-CSharp.xml" "$API/Vanilla/mscorlib.xml" "$API/Vanilla/Newtonsoft.Json.dll"
 elif [ -f "$API/Vanilla/Assembly-CSharp.dll" ] && ! patched "$API/Vanilla"; then
   echo "   (el juego ya tiene una Modding API sin copia de los originales: se reutiliza el modding-api/Vanilla que ya había)"
 else
@@ -41,18 +41,22 @@ else
 fi
 patched "$API/Vanilla" && fail "modding-api/Vanilla no es el juego original (tiene la Modding API)"
 
-echo "2. mscorlib del juego → modding-api/override"
+echo "2. override/mscorlib de hk-modding/api v77 → modding-api/override"
 mkdir -p "$API/override"
-cp "$API/Vanilla/mscorlib.dll" "$API/override/mscorlib.dll"
+OVERRIDE_BASE="https://raw.githubusercontent.com/hk-modding/api/1.5.78.11833-77/override"
+for f in mscorlib.dll mscorlib.xml; do
+  if [ ! -f "$API/override/$f" ]; then
+    curl -fsSL "$OVERRIDE_BASE/$f" -o "$API/override/$f" || fail "no se pudo descargar $OVERRIDE_BASE/$f"
+  fi
+done
 
 echo "3. Compilando la Modding API..."
 build() {
   local log
-  log="$(dotnet build "$1" -c Release -nologo -v:q 2>&1)" || { echo "$log" | grep -E " error " | sed -E 's/ \[.*//' | sort -u >&2; fail "no compila $1"; }
+  log="$(dotnet build "$1" -c Release -p:CopyDir= -nologo -v:q 2>&1)" || { echo "$log" | grep -E " error " | sed -E 's/ \[.*//' | sort -u >&2; fail "no compila $1"; }
 }
-# Los parcheadores primero: Assembly-CSharp los usa al compilar
+# El parcheador primero: Assembly-CSharp lo usa al compilar
 build "$API/PrePatcher/PrePatcher.csproj"
-build "$API/PostPatcher/PostPatcher.csproj"
 build "$API/HollowKnight.Modding.API.sln"
 [ -f "$API/OutputFinal/Assembly-CSharp.dll" ] || fail "no salió modding-api/OutputFinal/Assembly-CSharp.dll"
 # La librería nativa con la que la Modding API precarga escenas: el .csproj solo la copia compilando con

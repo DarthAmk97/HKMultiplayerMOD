@@ -51,7 +51,7 @@ internal static class GameFiles {
     internal const string ModsRelative = "hollow_knight_Data/Managed/Mods";
 
     /// <summary>Versión del juego para la que es la Modding API del paquete.</summary>
-    internal const string GameVersion = "1.5.12620";
+    internal const string GameVersion = "1.5.68.11808";
 
     private static readonly byte[] ModHooksBytes = Encoding.ASCII.GetBytes("ModHooks");
 

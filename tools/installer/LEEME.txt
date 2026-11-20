@@ -6,7 +6,7 @@ la partida: comparten el mundo, se ven en tiempo real y pelean juntos contra los
 jefes.
 
 Necesitas:
-  - Hollow Knight 1.5.12620 en Windows (la versión actual de Steam; la de GOG también vale).
+  - Hollow Knight 1.5.68.11808 en Windows (Unity 2020.2.2f1).
     Mac y Linux no: la Modding API del paquete es solo para Windows. La versión de Xbox/Game Pass
     no está probada y el instalador no la busca.
   - Que todos los jugadores tengan instalada la MISMA versión de HKMultiplayer.

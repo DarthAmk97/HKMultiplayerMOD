@@ -378,7 +378,7 @@ internal sealed class SceneObjectSync {
 
     /// <summary>Busca los objetos guardables de la sala (solo crea memoria al entrar en una sala).</summary>
     private void Scan() {
-        foreach (var persistent in Object.FindObjectsByType<PersistentBoolItem>(FindObjectsInactive.Include, FindObjectsSortMode.None)) {
+        foreach (var persistent in Object.FindObjectsOfType<PersistentBoolItem>(true)) {
             var id = persistent.persistentBoolData?.id;
             if (string.IsNullOrEmpty(id)) {
                 id = persistent.name;
@@ -413,7 +413,7 @@ internal sealed class SceneObjectSync {
 
         // Rompibles con la FSM genérica del juego sin guardable (el letrero de Cruces Olvidados): su "Activated" es
         // estar roto. No se guardan, pero quien entra después los ve como están en la sala
-        foreach (var fsm in Object.FindObjectsByType<PlayMakerFSM>(FindObjectsInactive.Include, FindObjectsSortMode.None)) {
+        foreach (var fsm in Object.FindObjectsOfType<PlayMakerFSM>(true)) {
             if (fsm.GetComponent<PersistentBoolItem>() != null || !FsmStateSync.IsBreakableTemplate(fsm)) {
                 continue;
             }
@@ -440,7 +440,7 @@ internal sealed class SceneObjectSync {
             }
         }
 
-        foreach (var geoRock in Object.FindObjectsByType<GeoRock>(FindObjectsInactive.Include, FindObjectsSortMode.None)) {
+        foreach (var geoRock in Object.FindObjectsOfType<GeoRock>(true)) {
             var id = geoRock.geoRockData?.id;
             if (string.IsNullOrEmpty(id)) {
                 id = geoRock.name;
@@ -461,24 +461,23 @@ internal sealed class SceneObjectSync {
             }
         }
 
-        foreach (var stalactite in Object.FindObjectsByType<StalactiteControl>(FindObjectsInactive.Include,
-                     FindObjectsSortMode.None)) {
+        foreach (var stalactite in Object.FindObjectsOfType<StalactiteControl>(true)) {
             _stalactites[ScenePaths.StableHash(stalactite.transform)] = stalactite;
         }
 
-        foreach (var lever in Object.FindObjectsByType<BridgeLever>(FindObjectsInactive.Include, FindObjectsSortMode.None)) {
+        foreach (var lever in Object.FindObjectsOfType<BridgeLever>(true)) {
             _levers[ScenePaths.StableHash(lever.transform)] = lever;
         }
 
-        foreach (var trigger in Object.FindObjectsByType<FlipPlatform>(FindObjectsInactive.Include, FindObjectsSortMode.None)) {
+        foreach (var trigger in Object.FindObjectsOfType<FlipPlatform>(true)) {
             _triggers[ScenePaths.StableHash(trigger.transform)] = trigger;
         }
 
-        foreach (var trigger in Object.FindObjectsByType<DropPlatform>(FindObjectsInactive.Include, FindObjectsSortMode.None)) {
+        foreach (var trigger in Object.FindObjectsOfType<DropPlatform>(true)) {
             _triggers[ScenePaths.StableHash(trigger.transform)] = trigger;
         }
 
-        foreach (var trigger in Object.FindObjectsByType<JellyEgg>(FindObjectsInactive.Include, FindObjectsSortMode.None)) {
+        foreach (var trigger in Object.FindObjectsOfType<JellyEgg>(true)) {
             _triggers[ScenePaths.StableHash(trigger.transform)] = trigger;
         }
     }

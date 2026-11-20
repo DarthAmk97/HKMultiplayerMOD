@@ -1610,8 +1610,7 @@ internal sealed class EnemySync {
         }
 
         Transform top = null;
-        foreach (var marker in UnityEngine.Object.FindObjectsByType<HazardRespawnMarker>(FindObjectsInactive.Include,
-                     FindObjectsSortMode.None)) {
+        foreach (var marker in UnityEngine.Object.FindObjectsOfType<HazardRespawnMarker>(true)) {
             var parent = marker.transform.parent;
             if (parent != null && parent.parent != null && parent.parent.name == AscendRespawns &&
                 marker.gameObject.scene == enemy.Root.scene && (top == null || marker.transform.position.y > top.position.y)) {
@@ -1753,8 +1752,7 @@ internal sealed class EnemySync {
         // soltarlo quedaba apuntado dos veces y en el otro PC se encendía también el suyo, en el mismo sitio que la copia
         _spawnerHeld.Clear();
         if (SpawnerEnemyField != null) {
-            foreach (var spawner in UnityEngine.Object.FindObjectsByType<EnemySpawner>(FindObjectsInactive.Include,
-                         FindObjectsSortMode.None)) {
+            foreach (var spawner in UnityEngine.Object.FindObjectsOfType<EnemySpawner>(true)) {
                 if (SpawnerEnemyField.GetValue(spawner) is GameObject held && held != null) {
                     _spawnerHeld.Add(held);
                 }
@@ -1823,8 +1821,7 @@ internal sealed class EnemySync {
     private uint? CreatorId(GameObject clone) {
         if (_creatorIds == null) {
             _creatorIds = new Dictionary<GameObject, uint>();
-            foreach (var fsm in UnityEngine.Object.FindObjectsByType<PlayMakerFSM>(FindObjectsInactive.Include,
-                         FindObjectsSortMode.None)) {
+            foreach (var fsm in UnityEngine.Object.FindObjectsOfType<PlayMakerFSM>(true)) {
                 if (fsm.gameObject.scene.buildIndex < 0 || IsEnemyObject(fsm.transform)) {
                     continue;
                 }
@@ -2467,7 +2464,7 @@ internal sealed class EnemySync {
                 return MovesSceneObject(enemy, action.Fsm.GetOwnerDefaultTarget(moveTo.gameObject));
             case HutongGames.PlayMaker.Actions.iTweenMoveBy moveBy:
                 return MovesSceneObject(enemy, action.Fsm.GetOwnerDefaultTarget(moveBy.gameObject));
-            case HutongGames.PlayMaker.Actions.SendEventToRegister register:
+            case global::SendEventToRegister register:
                 return register.eventName?.Value != null && EffectRegisterEvents.Contains(register.eventName.Value);
             // Un efecto que su lógica pone en un punto (la carga del orbe del Maestro de Almas, en el punto al azar donde
             // saldrá): el punto llega con las variables del efecto. Sin esto la carga salía donde estuviera y el orbe en otro
@@ -4721,8 +4718,7 @@ internal sealed class EnemySync {
         _scenePathsOf = scene;
         _scenePathsAt = now;
         ScenePathTable.Clear();
-        foreach (var candidate in UnityEngine.Object.FindObjectsByType<Transform>(FindObjectsInactive.Include,
-                     FindObjectsSortMode.None)) {
+        foreach (var candidate in UnityEngine.Object.FindObjectsOfType<Transform>(true)) {
             if (candidate.gameObject.scene.buildIndex >= 0) {
                 ScenePathTable[ScenePaths.StableHash(candidate)] = candidate.gameObject;
             }

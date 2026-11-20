@@ -466,8 +466,7 @@ internal sealed class QuestNpcSync {
         ScanToggles();
         var hero = HeroController.instance;
         var reads = new List<string>();
-        foreach (var fsm in UnityEngine.Object.FindObjectsByType<PlayMakerFSM>(FindObjectsInactive.Include,
-                     FindObjectsSortMode.None)) {
+        foreach (var fsm in UnityEngine.Object.FindObjectsOfType<PlayMakerFSM>(true)) {
             if (fsm.Fsm == null || fsm.gameObject.scene.buildIndex < 0 ||
                 hero != null && fsm.transform.IsChildOf(hero.transform) ||
                 Scene.EnemySync.IsEnemyObject(fsm.transform) || Scene.FsmStateSync.IsSharedController(fsm.Fsm) ||
@@ -501,24 +500,20 @@ internal sealed class QuestNpcSync {
 
     private void ScanToggles() {
         TurnedOffAtLoad.RemoveWhere(toggle => toggle == null);
-        foreach (var toggle in UnityEngine.Object.FindObjectsByType<DeactivateIfPlayerdataTrue>(FindObjectsInactive.Include,
-                     FindObjectsSortMode.None)) {
+        foreach (var toggle in UnityEngine.Object.FindObjectsOfType<DeactivateIfPlayerdataTrue>(true)) {
             AddToggle(toggle.boolName, toggle);
         }
 
-        foreach (var toggle in UnityEngine.Object.FindObjectsByType<DeactivateIfPlayerdataFalse>(FindObjectsInactive.Include,
-                     FindObjectsSortMode.None)) {
+        foreach (var toggle in UnityEngine.Object.FindObjectsOfType<DeactivateIfPlayerdataFalse>(true)) {
             AddToggle(toggle.boolName, toggle);
         }
 
-        foreach (var toggle in UnityEngine.Object.FindObjectsByType<ActivateIfPlayerdataTrue>(FindObjectsInactive.Include,
-                     FindObjectsSortMode.None)) {
+        foreach (var toggle in UnityEngine.Object.FindObjectsOfType<ActivateIfPlayerdataTrue>(true)) {
             AddToggle(toggle.boolName, toggle);
         }
 
         // Solo en GG_Atrium (el camino escondido, `top2`): apaga su objeto un rato después de encenderse
-        foreach (var toggle in UnityEngine.Object.FindObjectsByType<DeactivateIfPlayerdataFalseDelayed>(FindObjectsInactive.Include,
-                     FindObjectsSortMode.None)) {
+        foreach (var toggle in UnityEngine.Object.FindObjectsOfType<DeactivateIfPlayerdataFalseDelayed>(true)) {
             AddToggle(toggle.boolName, toggle);
         }
     }

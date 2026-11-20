@@ -1,15 +1,21 @@
 #!/usr/bin/env bash
-# Compila el mod en Release (queda en out/HKMultiplayer). Con --game lo instala también en el juego de Steam.
-# Uso: bash tools/test-cycle.sh [--game]
+# Compila el mod en Release (queda en out/HKMultiplayer). Con --game [ruta] (o HK_GAME_DIR) lo instala también en el juego.
+# Uso: bash tools/test-cycle.sh [--game [ruta]]
 set -uo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-GAME="/c/Program Files (x86)/Steam/steamapps/common/Hollow Knight"
+GAME="${HK_GAME_DIR:-/c/Program Files (x86)/Steam/steamapps/common/Hollow Knight}"
 MOD_NAME="HKMultiplayer"
 INSTALL_GAME=false
 while [ $# -gt 0 ]; do
   case "$1" in
-    --game) INSTALL_GAME=true ;;
+    --game)
+      INSTALL_GAME=true
+      if [ $# -gt 1 ] && [[ "$2" != -* ]]; then
+        GAME="$2"
+        shift
+      fi
+      ;;
   esac
   shift
 done

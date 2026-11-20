@@ -6,6 +6,7 @@ using System.Reflection;
 using HKMultiplayer.Game.Players;
 using HKMultiplayer.Net;
 using HKMultiplayer.Session;
+using HKMultiplayer.Util;
 using UnityEngine;
 
 namespace HKMultiplayer.Game.Scene;
@@ -360,8 +361,7 @@ internal sealed class BreakableSync {
 
     private void Scan() {
         foreach (var kind in Kinds) {
-            foreach (var found in UnityEngine.Object.FindObjectsByType(kind.Type, FindObjectsInactive.Include,
-                         FindObjectsSortMode.None)) {
+            foreach (var found in UnityEngine.Object.FindObjectsOfType(kind.Type, true)) {
                 var component = (MonoBehaviour) found;
                 if (IsPoolObject(component.gameObject)) {
                     continue;
@@ -391,7 +391,7 @@ internal sealed class BreakableSync {
     /// Son solo decoración, así que cada PC tiene las suyas.
     /// </summary>
     private static bool IsPoolObject(GameObject gameObject) =>
-        ObjectPool.IsSpawned(gameObject) || gameObject.GetComponentInParent<ObjectPool>(true) != null ||
+        ObjectPool.IsSpawned(gameObject) || gameObject.GetComponentInParentCompat<ObjectPool>(true) != null ||
         gameObject.GetComponent<AutoRecycleSelf>() != null;
 
     private bool IsTrackedObject(MonoBehaviour component) {

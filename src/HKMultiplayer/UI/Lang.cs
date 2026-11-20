@@ -1,5 +1,5 @@
 using System;
-using TeamCherry.Localization;
+using Language;
 
 namespace HKMultiplayer.UI;
 
@@ -13,7 +13,7 @@ internal static class Lang {
     public static bool Spanish {
         get {
             try {
-                return TeamCherry.Localization.Language.CurrentLanguage() == LanguageCode.ES;
+                return Language.Language.CurrentLanguage() == LanguageCode.ES;
             } catch (Exception) {
                 return false;
             }

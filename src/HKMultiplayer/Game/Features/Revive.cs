@@ -120,13 +120,6 @@ internal sealed class Revive {
         "FinishedEnteringScene", BindingFlags.NonPublic | BindingFlags.Instance, null, new[] { typeof(bool), typeof(bool) },
         null);
 
-    private static readonly MethodInfo SendHeroInPositionMethod =
-        typeof(HeroController).GetMethod("SendHeroInPosition", BindingFlags.NonPublic | BindingFlags.Instance);
-
-    /// <summary>Invulnerable un rato, parpadeando (como tras un golpe).</summary>
-    private static readonly MethodInfo StartInvulnerableMethod =
-        typeof(HeroController).GetMethod("StartInvulnerable", BindingFlags.NonPublic | BindingFlags.Instance);
-
     private static Revive _active;
     private static bool _hooked;
 
@@ -1602,7 +1595,7 @@ internal sealed class Revive {
             hero.AddHealth(_reviveFull || masks <= 0 ? pd.maxHealth : Math.Min(masks, pd.maxHealth));
             _reviveFull = false;
             try {
-                StartInvulnerableMethod?.Invoke(hero, new object[] { HostSettings.Current.ReviveInvulnerable });
+                UnityCompat.StartInvulnerable(hero, HostSettings.Current.ReviveInvulnerable);
             } catch (Exception e) {
                 Log.Warn($"No se pudo poner la invulnerabilidad al revivir: {e.Message}");
             }
@@ -1695,7 +1688,7 @@ internal sealed class Revive {
         }
 
         try {
-            SendHeroInPositionMethod?.Invoke(hero, new object[] { true });
+            UnityCompat.SendHeroInPosition(hero, true);
         } catch (Exception e) {
             Log.Warn($"SendHeroInPosition falló: {e.Message}");
         }
@@ -1781,7 +1774,7 @@ internal sealed class Revive {
         hero.AffectedByGravity(false);
         var body = hero.GetComponent<Rigidbody2D>();
         if (body != null) {
-            body.linearVelocity = Vector2.zero;
+            body.velocity = Vector2.zero;
             body.bodyType = RigidbodyType2D.Kinematic;
         }
 
@@ -1824,7 +1817,7 @@ internal sealed class Revive {
         var body = hero.GetComponent<Rigidbody2D>();
         if (body != null) {
             body.bodyType = RigidbodyType2D.Dynamic;
-            body.linearVelocity = Vector2.zero;
+            body.velocity = Vector2.zero;
         }
 
         var collider = hero.GetComponent<Collider2D>();
@@ -1855,7 +1848,7 @@ internal sealed class Revive {
         if (scene != _cameraAreasScene) {
             _cameraAreasScene = scene;
             _insideCameraAreas.Clear();
-            _cameraAreas = UnityEngine.Object.FindObjectsByType<CameraLockArea>(FindObjectsSortMode.None);
+            _cameraAreas = UnityEngine.Object.FindObjectsOfType<CameraLockArea>();
         }
 
         var heroCollider = hero.GetComponent<Collider2D>();

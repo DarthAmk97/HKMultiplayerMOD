@@ -90,8 +90,8 @@ internal sealed class Installer {
     }
 
     /// <summary>
-    /// La Modding API del paquete es para Hollow Knight 1.5.12620 (Unity 6, con los ensamblados TeamCherry.*). En otra
-    /// versión del juego dejaría el juego sin arrancar.
+    /// La Modding API del paquete es para Hollow Knight 1.5.68.11808 (Unity 2020.2.2f1). En otra versión del juego
+    /// dejaría el juego sin arrancar.
     /// </summary>
     private static void AssertCompatibleGame(string game) {
         var managed = Join(game, "hollow_knight_Data/Managed");
@@ -102,23 +102,21 @@ internal sealed class Installer {
 
         var player = Path.Combine(game, "UnityPlayer.dll");
         var unity = File.Exists(player) ? FileVersionInfo.GetVersionInfo(player).FileVersion ?? string.Empty : string.Empty;
-        // La versión del juego va en su Assembly-CSharp.dll (Constants.GAME_VERSION, en UTF-16): un parche futuro con el
-        // mismo Unity pasaba la comprobación y se le copiaba un Assembly-CSharp.dll hecho para otra versión
+        // La versión del juego va en su Assembly-CSharp.dll (Constants.GAME_VERSION, en UTF-16): un parche con el mismo
+        // Unity pasaba la comprobación y se le copiaba un Assembly-CSharp.dll hecho para otra versión
         var assembly = Path.Combine(managed, "Assembly-CSharp.dll");
         if (File.Exists(assembly) && !IsGameVersion(assembly)) {
             throw new SetupException(L(
-                $"Este mod es para Hollow Knight {GameVersion} y tu juego es de otra versión. Actualízalo en Steam " +
-                "(Propiedades > Betas: ninguna) o, si Steam ya tiene otra más nueva, espera a una versión del mod para ella.",
-                $"This mod is for Hollow Knight {GameVersion} and your game is a different version. Update it in Steam " +
-                "(Properties > Betas: none) or, if Steam already has a newer one, wait for a mod version for it."));
+                $"Este mod (rama 1.5.68.11808) es para Hollow Knight {GameVersion} y tu juego es de otra versión.",
+                $"This mod (1.5.68.11808 branch) is for Hollow Knight {GameVersion} and your game is a different version."));
         }
 
-        if (!unity.StartsWith("6000.", StringComparison.Ordinal) || !File.Exists(Path.Combine(managed, "TeamCherry.TK2D.dll"))) {
+        if (!unity.StartsWith("2020.2.", StringComparison.Ordinal)) {
             throw new SetupException(L(
-                $"Este mod es para Hollow Knight {GameVersion} (la versión actual de Steam). Tu juego es de otra versión " +
-                $"(motor Unity '{unity}'). Actualízalo en Steam (Propiedades > Betas: ninguna) y vuelve a instalar.",
-                $"This mod is for Hollow Knight {GameVersion} (the current Steam version). Your game is a different version " +
-                $"(Unity engine '{unity}'). Update it in Steam (Properties > Betas: none) and install again."));
+                $"Este mod (rama 1.5.68.11808) es para Hollow Knight {GameVersion} (Unity 2020.2.2f1). Tu juego es de otra versión " +
+                $"(motor Unity '{unity}').",
+                $"This mod (1.5.68.11808 branch) is for Hollow Knight {GameVersion} (Unity 2020.2.2f1). Your game is a different version " +
+                $"(Unity engine '{unity}')."));
         }
     }
 
@@ -447,7 +445,8 @@ internal sealed class Installer {
                     // Un ensamblado que ya no es el de la Modding API lo volvió a poner Steam (actualización o "Verificar
                     // integridad") y es más nuevo que la copia: se deja. Si no, volvía uno de una versión anterior del juego.
                     // Solo los archivos del juego: los de Mods (un mod puesto a mano antes de instalar) se devuelven siempre
-                    if (!parts[1].StartsWith(ModsRelative + "/", StringComparison.Ordinal) && File.Exists(target) &&
+                    if (!parts[1].StartsWith(ModsRelative + "/", StringComparison.Ordinal) &&
+                        !parts[1].EndsWith("/mscorlib.dll", StringComparison.OrdinalIgnoreCase) && File.Exists(target) &&
                         File.Exists(copy) && !IsModded(copy) && !IsModded(target) && Sha256(target) != Sha256(copy)) {
                         Note(L($"Se deja {parts[1]}: el juego lo cambió después de instalar (es su versión original más nueva).",
                             $"{parts[1]} is kept: the game changed it after the install (it's its newer original version)."));

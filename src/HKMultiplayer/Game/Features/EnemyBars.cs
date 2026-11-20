@@ -62,7 +62,7 @@ internal sealed class EnemyBars {
     public void Attach() {
         _active = this;
         _tracked.Clear();
-        foreach (var health in Object.FindObjectsByType<HealthManager>(FindObjectsSortMode.None)) {
+        foreach (var health in Object.FindObjectsOfType<HealthManager>()) {
             Track(health);
         }
     }

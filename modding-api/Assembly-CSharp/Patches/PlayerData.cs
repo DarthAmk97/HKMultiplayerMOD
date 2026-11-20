@@ -1,6 +1,4 @@
-using Mono.Cecil.Cil;
 using MonoMod;
-using MonoMod.Cil;
 using UnityEngine;
 
 // ReSharper disable All
@@ -12,6 +10,9 @@ namespace Modding.Patches
     [MonoModPatch("global::PlayerData")]
     public class PlayerData : global::PlayerData
     {
+        [MonoModIgnore]
+        public static PlayerData instance { get; set; }
+
         public void SetBoolInternal(string boolName, bool value)
         {
             ReflectionHelper.SetFieldSafe(this, boolName, value);
@@ -227,47 +228,20 @@ namespace Modding.Patches
             TakeHealthInternal(amount);
         }
 
-        [MonoModIgnore]
-        [Attributes.RawIlPatch(nameof(IlPatches.PlayerData_UpdateBlueHealth))]
-        extern public void UpdateBlueHealth();
+        public extern void orig_UpdateBlueHealth();
 
-        [MonoModIgnore]
-        [Attributes.RawIlPatch(nameof(IlPatches.PlayerData_AddHealth))]
-        extern public void AddHealth(int amount);
-    }
-
-    public static partial class IlPatches
-    {
-        [MonoModIgnore]
-        public static void PlayerData_UpdateBlueHealth(ILContext il)
+        public void UpdateBlueHealth()
         {
-            // add a `SetInt(nameof(healthBlue), GetInt(nameof(healthBlue)) + ModHooks.OnBlueHealth());` at the end
-            ILCursor cursor = new ILCursor(il);
-
-            cursor.GotoNext
-            (
-                MoveType.AfterLabel,
-                x => x.MatchRet()
-            );
-            cursor.Emit(OpCodes.Ldarg_0);
-            cursor.Emit(OpCodes.Ldstr, nameof(global::PlayerData.healthBlue));
-            cursor.Emit(OpCodes.Ldarg_0);
-            cursor.Emit(OpCodes.Ldstr, nameof(global::PlayerData.healthBlue));
-            cursor.Emit(OpCodes.Callvirt, ReflectionHelper.GetMethodInfo(typeof(global::PlayerData), "GetInt", true));
-            cursor.EmitDelegate(global::Modding.ModHooks.OnBlueHealth);
-            cursor.Emit(OpCodes.Add);
-            cursor.Emit(OpCodes.Callvirt, ReflectionHelper.GetMethodInfo(typeof(global::PlayerData), "SetInt", true));
+            orig_UpdateBlueHealth();
+            SetInt(nameof(healthBlue), GetInt(nameof(healthBlue)) + ModHooks.OnBlueHealth());
         }
 
-        [MonoModIgnore]
-        public static void PlayerData_AddHealth(ILContext il)
-        {
-            // add a `amount = ModHooks.BeforeAddHealth(amount);` at the start
-            ILCursor cursor = new ILCursor(il).Goto(0);
+        public extern void orig_AddHealth(int amount);
 
-            cursor.Emit(OpCodes.Ldarg_1);
-            cursor.EmitDelegate(global::Modding.ModHooks.BeforeAddHealth);
-            cursor.Emit(OpCodes.Starg, 1);
+        public void AddHealth(int amount)
+        {
+            amount = ModHooks.BeforeAddHealth(amount);
+            orig_AddHealth(amount);
         }
     }
 }

@@ -6,7 +6,7 @@
 
 ![Version](https://img.shields.io/badge/version-0.36.2-7fb2ff)
 ![Status](https://img.shields.io/badge/status-beta-f0c86a)
-![Hollow Knight](https://img.shields.io/badge/Hollow%20Knight-1.5.12620-e8ecf3)
+![Hollow Knight](https://img.shields.io/badge/Hollow%20Knight-1.5.68.11808-e8ecf3)
 ![Platform](https://img.shields.io/badge/platform-Windows-2f5fb3)
 ![Languages](https://img.shields.io/badge/languages-english%20%7C%20español-7ddc8f)
 [![Ko-fi](https://img.shields.io/badge/Ko--fi-support%20the%20project-ff5e5b?logo=ko-fi&logoColor=white)](https://ko-fi.com/yesidrobayo)
@@ -273,7 +273,7 @@ More detail (in Spanish) in [docs/arquitectura.md](docs/arquitectura.md#limitaci
 ## 📦 Install
 
 > [!NOTE]
-> You need **Hollow Knight 1.5.12620 on Windows** (the current Steam version; GOG works too). All players must have
+> You need **Hollow Knight 1.5.68.11808 on Windows** (Unity `2020.2.2f1`; this branch is ported from upstream's `1.5.12620` Unity 6 release). All players must have
 > **the same version** of HKMultiplayer. Mac and Linux are not supported, and the Xbox/Game Pass version is not tested.
 
 1. Download `HKMultiplayer-<version>.zip` from the [*Releases*](../../releases) page.
@@ -290,7 +290,7 @@ it, install by hand (below).
 
 - Finds the game folder (Steam, its libraries and the usual paths); if there are several, you pick one from the list,
   and if none is found, you use *Browse…*.
-- Checks that the game is version 1.5.12620 and closed, and that the package is complete (`SHA256SUMS.txt`).
+- Checks that the game is version 1.5.68.11808 (Unity `2020.2.2f1`) and closed, and that the package is complete (`SHA256SUMS.txt`).
 - Saves a copy of every file it changes in `<game>\HKMultiplayer-backup` and records everything in `manifest.txt`.
 - Removes the old **HollowKnightCoop** mod if present and moves other mods to `Mods\Disabled`, telling you which ones
   before installing (mods built for another Modding API version can break the game).
@@ -360,11 +360,11 @@ stunned when several players hit them at once.
 
 | Component | Used for |
 |---|---|
-| **Hollow Knight Modding API** (Unity 6) | Loading the mod and hooking the game. A modified version for 1.5.12620, included in [`modding-api/`](modding-api). |
+| **Hollow Knight Modding API** (Unity 2020.2) | Loading the mod and hooking the game. Based on `hk-modding/api` `1.5.78.11833-77` with `-modlog` support for 1.5.68.11808, included in [`modding-api/`](modding-api). |
 | **MonoMod** | Hooks into the game's code (`MMHOOK_*.dll`, `MonoMod.RuntimeDetour`). |
 | **PlayMaker** | Reading and driving the game's state machines: enemies, bosses, elevators, gates, arenas, dialogues. |
 | **BouncyCastle** | Encryption: X25519, HKDF-SHA256 with the game code and ChaCha20-Poly1305 on every packet. |
-| **Steamworks.NET** (the one the game ships) | Steam lobbies, invites and account-to-account connections (SteamNetworkingMessages, direct or through Valve's relays) to play without port forwarding. |
+| **Steamworks.NET** (the one the game ships) | Steam lobbies, invites and account-to-account connections (`SteamNetworking` P2P, direct or through Valve's relays) to play without port forwarding. |
 | **Unity UI** | Menus in the game's style, notices and the partner HUD (with the game's own HUD sprites). |
 
 - **Custom networking over UDP or Steam**: reliable and unreliable channels, chunked large transfers (the world when joining),
@@ -394,7 +394,7 @@ stunned when several players hit them at once.
 | `src/HKMultiplayer/Game/Scene/` | Room objects, breakables, elevators and gates, battle controllers, enemies and bosses, animated hazards. |
 | `src/HKMultiplayer/UI/` | Menus, notices, language and the co-op HUD canvas. |
 | `src/HKMultiplayer/Testing/` | Development tools; inactive in a normal game. |
-| `modding-api/` | Modding API source (hk-modding/api, MIT) for Unity 6: the `hk-beta-branch-unity-6-update` branch of `SFGrenade/api` (PR hk-modding/api#164, commit `468f579`) with our own changes. No game files. |
+| `modding-api/` | Modding API source (`hk-modding/api` tag `1.5.78.11833-77`, MIT) for Unity 2020.2.2f1 with `-modlog` support. No game files. |
 | `tests/` | Transport tests outside the game (`tests/NetTests`). |
 | `tools/` | PC setup (`setup-dev.sh`), build and install (`test-cycle.sh`), package and installer. |
 | `docs/` | [Architecture](docs/arquitectura.md) (Spanish): how the mod works inside. |
@@ -406,13 +406,13 @@ The game's DLLs belong to Team Cherry and are not in the repository: they are ta
 
 ### Building (also on another PC)
 
-You need Hollow Knight 1.5.12620 installed, the .NET SDK (`dotnet`) and Git Bash.
+You need Hollow Knight 1.5.68.11808 installed, the .NET SDK (`dotnet`) and Git Bash.
 
 ```bash
-git clone https://github.com/Yesid-Robayo/HKMultiplayerMOD.git
+git clone -b hk-1.5.68.11808 https://github.com/DarthAmk97/HKMultiplayerMOD.git
 cd HKMultiplayerMOD
-bash tools/setup-dev.sh "C:/Program Files (x86)/Steam/steamapps/common/Hollow Knight"   # once
-bash tools/test-cycle.sh --game     # builds the mod and installs it in the game
+bash tools/setup-dev.sh "D:/Games/Hollow Knight"   # once (or your game folder)
+bash tools/test-cycle.sh --game "D:/Games/Hollow Knight"     # builds the mod and installs it in the game
 dotnet run --project tests/NetTests # transport tests
 bash tools/package.sh               # player package: out/package/HKMultiplayer-<version>.zip
 ```
@@ -426,12 +426,10 @@ edit `modding-api/` and run it again.
 
 ## 🙏 Credits
 
-- **[Hollow Knight](https://www.hollowknight.com/)** is by **Team Cherry**. This mod is an unofficial fan project and is
+- **[Hollow Knight](https://www.hollowknight.com/)** is by **Team Cherry**. This mod is an unofficial fan project (originally created by **[Yesid Robayo](https://github.com/Yesid-Robayo/HKMultiplayerMOD)**) and is
   not affiliated with Team Cherry. The repository contains no game files; like the official Modding API releases, the
-  player package includes the game's `Assembly-CSharp.dll` and `TeamCherry.Localization.dll` already patched by the
-  Modding API.
-- **[Hollow Knight Modding API](https://github.com/hk-modding/api)** (MIT), with the Unity 6 port by
-  [SFGrenade](https://github.com/SFGrenade/api).
+  player package includes the game's `Assembly-CSharp.dll` patched by the Modding API and its `mscorlib.dll` override.
+- **[Hollow Knight Modding API](https://github.com/hk-modding/api)** (MIT).
 - **[MonoMod](https://github.com/MonoMod/MonoMod)**, **[Mono.Cecil](https://github.com/jbevain/cecil)**,
   **[unity-scene-repacker](https://github.com/jakobhellermann/unity-scene-repacker)**,
   **[BouncyCastle](https://www.bouncycastle.org/)** and **[Newtonsoft.Json](https://www.newtonsoft.com/json)**, all MIT

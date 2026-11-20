@@ -190,7 +190,7 @@ internal sealed class TestDriver : MonoBehaviour {
             case "uiselect":
                 // uiselect <nombre>: resalta en el menú el primer objeto activo con ese nombre (como llegar a él con el mando)
                 var uiName = string.Join(" ", args.Skip(1));
-                var uiTarget = UnityEngine.Object.FindObjectsByType<UnityEngine.UI.Selectable>(FindObjectsSortMode.None)
+                var uiTarget = UnityEngine.Object.FindObjectsOfType<UnityEngine.UI.Selectable>()
                     .FirstOrDefault(sel => sel.gameObject.activeInHierarchy && sel.name == uiName);
                 if (uiTarget == null) {
                     Log.Warn($"{Tag}no hay '{uiName}' en el menú");
@@ -251,7 +251,7 @@ internal sealed class TestDriver : MonoBehaviour {
                 // límite, ordenados por ruta)
                 var stateLines = new List<string>();
                 var stateText = string.Join(" ", args.Skip(1));
-                foreach (var fsm in UnityEngine.Object.FindObjectsByType<PlayMakerFSM>(FindObjectsInactive.Include, FindObjectsSortMode.None)) {
+                foreach (var fsm in UnityEngine.Object.FindObjectsOfType<PlayMakerFSM>(true)) {
                     if (fsm.gameObject.scene.buildIndex < 0 ||
                         fsm.gameObject.name.IndexOf(stateText, StringComparison.OrdinalIgnoreCase) < 0) {
                         continue;
@@ -330,7 +330,7 @@ internal sealed class TestDriver : MonoBehaviour {
                 break;
             case "pantheonbegin":
                 // pantheonbegin: pulsa "empezar" en el cuadro abierto de la puerta de un Panteón (antes, up junto a ella)
-                var challengeUi = FindObjectsByType<BossDoorChallengeUI>(FindObjectsSortMode.None).FirstOrDefault();
+                var challengeUi = FindObjectsOfType<BossDoorChallengeUI>().FirstOrDefault();
                 if (challengeUi == null) {
                     Log.Warn($"{Tag}no hay cuadro de Panteón abierto");
                 } else {
@@ -365,7 +365,7 @@ internal sealed class TestDriver : MonoBehaviour {
                 // teclado directamente, no los botones del caballero)
                 var waitingField = typeof(BossDoorChallengeCompleteUI).GetField("waitingForInput",
                     System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-                foreach (var completeUi in FindObjectsByType<BossDoorChallengeCompleteUI>(FindObjectsSortMode.None)) {
+                foreach (var completeUi in FindObjectsOfType<BossDoorChallengeCompleteUI>()) {
                     waitingField?.SetValue(completeUi, false);
                     Log.Info($"{Tag}resultados del Panteón cerrados");
                 }
@@ -458,7 +458,7 @@ internal sealed class TestDriver : MonoBehaviour {
             case "wake":
                 // wake <inicio del nombre>: enciende el primer enemigo apagado con ese nombre (los de las jaulas del
                 // Coliseo) y lo pone junto al caballero
-                var sleeping = FindObjectsByType<HealthManager>(FindObjectsInactive.Include, FindObjectsSortMode.None)
+                var sleeping = FindObjectsOfType<HealthManager>(true)
                     .FirstOrDefault(h => !h.gameObject.activeInHierarchy && !h.isDead &&
                                          h.name.StartsWith(string.Join(" ", args.Skip(1)), StringComparison.Ordinal));
                 if (sleeping == null) {
@@ -476,7 +476,7 @@ internal sealed class TestDriver : MonoBehaviour {
                 break;
             case "healthlist":
                 // healthlist: todos los objetos con vida de la sala, con su padre y su huella (para ver repetidos)
-                foreach (var hm in FindObjectsByType<HealthManager>(FindObjectsInactive.Include, FindObjectsSortMode.None)) {
+                foreach (var hm in FindObjectsOfType<HealthManager>(true)) {
                     var t = hm.transform;
                     var hmFlags = System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance;
                     Log.Info($"{Tag}vida {hm.name} padre={(t.parent != null ? t.parent.name : "-")} " +
@@ -533,7 +533,7 @@ internal sealed class TestDriver : MonoBehaviour {
                 // defecto NAIL HIT), como si lo golpeara de verdad
                 var hitArgs = string.Join(" ", args.Skip(1)).Split('|');
                 var hitEvent = hitArgs.Length > 1 ? hitArgs[1] : "NAIL HIT";
-                var nearest = FindObjectsByType<PlayMakerFSM>(FindObjectsSortMode.None)
+                var nearest = FindObjectsOfType<PlayMakerFSM>()
                     .Where(f => f.gameObject.name == hitArgs[0])
                     .OrderBy(f => (f.transform.position - hero.transform.position).sqrMagnitude)
                     .FirstOrDefault();
@@ -563,7 +563,7 @@ internal sealed class TestDriver : MonoBehaviour {
                 // findobj <texto>: objetos de la sala cuyo nombre lo contiene, con sus componentes
                 var needle = string.Join(" ", args.Skip(1));
                 var shown = 0;
-                foreach (var found in FindObjectsByType<Transform>(FindObjectsInactive.Include, FindObjectsSortMode.None)) {
+                foreach (var found in FindObjectsOfType<Transform>(true)) {
                     if (found.name.IndexOf(needle, StringComparison.OrdinalIgnoreCase) < 0 || shown++ >= 15) {
                         continue;
                     }
@@ -579,7 +579,7 @@ internal sealed class TestDriver : MonoBehaviour {
             case "findactive":
                 // findactive <texto>: solo los objetos activos cuyo nombre lo contiene, con su posición
                 var activeNeedle = string.Join(" ", args.Skip(1));
-                foreach (var found in FindObjectsByType<Transform>(FindObjectsSortMode.None)) {
+                foreach (var found in FindObjectsOfType<Transform>()) {
                     if (found.name.IndexOf(activeNeedle, StringComparison.OrdinalIgnoreCase) >= 0) {
                         var fsms = string.Join(",", found.GetComponents<PlayMakerFSM>().Select(f => f.FsmName + ":" + f.ActiveStateName));
                         Log.Info($"{Tag}activo {found.name} padre={(found.parent != null ? found.parent.name : "-")} " +
@@ -610,7 +610,7 @@ internal sealed class TestDriver : MonoBehaviour {
                 break;
             case "fsmnames":
                 // Nombres de FSM de la sala y cuántas hay de cada uno
-                foreach (var group in FindObjectsByType<PlayMakerFSM>(FindObjectsInactive.Include, FindObjectsSortMode.None)
+                foreach (var group in FindObjectsOfType<PlayMakerFSM>(true)
                              .GroupBy(f => f.FsmName).OrderByDescending(g => g.Count())) {
                     Log.Info($"{Tag}fsmname {group.Key} x{group.Count()} ej={group.First().gameObject.name}");
                 }
@@ -652,7 +652,7 @@ internal sealed class TestDriver : MonoBehaviour {
                 Log.Info($"{Tag}rotos {runner.Breakables.TestBreakNearest(int.Parse(args[1]))}");
                 break;
             case "gates":
-                foreach (var gate in FindObjectsByType<TransitionPoint>(FindObjectsSortMode.None)) {
+                foreach (var gate in FindObjectsOfType<TransitionPoint>()) {
                     Log.Info($"{Tag}puerta {gate.name} pos=({gate.transform.position.x:0.0},{gate.transform.position.y:0.0})");
                 }
 
@@ -709,8 +709,7 @@ internal sealed class TestDriver : MonoBehaviour {
             case "bossloaders":
                 // bossloaders: las partes de la sala que se cargan con condiciones (la sala de un jefe: Ruins2_03_boss) y
                 // de qué dependen: el dato del jugador, las pruebas extra y la puerta por la que hay que entrar
-                foreach (var loader in FindObjectsByType<SceneAdditiveLoadConditional>(FindObjectsInactive.Include,
-                             FindObjectsSortMode.None)) {
+                foreach (var loader in FindObjectsOfType<SceneAdditiveLoadConditional>(true)) {
                     var bools = loader.extraBoolTests == null ? "-"
                         : string.Join(",", loader.extraBoolTests.Select(t => $"{t.playerDataBool}={t.value}"));
                     var ints = loader.extraIntTests == null ? "-"
@@ -783,7 +782,7 @@ internal sealed class TestDriver : MonoBehaviour {
                 var groundBelow = typeof(HKMultiplayer.Game.Features.Revive).GetMethod("GroundBelow",
                     System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
                 Log.Info($"{Tag}rayos desde dentro de un colisionador: {Physics2D.queriesStartInColliders}");
-                foreach (var marker in UnityEngine.Object.FindObjectsByType<HazardRespawnMarker>(FindObjectsSortMode.None)) {
+                foreach (var marker in UnityEngine.Object.FindObjectsOfType<HazardRespawnMarker>()) {
                     var at = marker.transform.position;
                     var callArgs = new object[] { hero, at, null, 10f };
                     var found = groundBelow != null && (bool) groundBelow.Invoke(null, callArgs);
@@ -809,11 +808,11 @@ internal sealed class TestDriver : MonoBehaviour {
                 }
 
                 var activatedField = typeof(FSMActivator).GetField("activated", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
-                var touching = UnityEngine.Object.FindObjectsByType<ActiveRegion>(FindObjectsSortMode.None)
+                var touching = UnityEngine.Object.FindObjectsOfType<ActiveRegion>()
                     .Where(region => region.GetComponent<Collider2D>() != null && activatorObject.GetComponent<Collider2D>() != null &&
                                      region.GetComponent<Collider2D>().IsTouching(activatorObject.GetComponent<Collider2D>()))
                     .Select(region => PathOf(region.transform));
-                var regions = UnityEngine.Object.FindObjectsByType<ActiveRegion>(FindObjectsSortMode.None)
+                var regions = UnityEngine.Object.FindObjectsOfType<ActiveRegion>()
                     .Select(region => $"{PathOf(region.transform)} activo={region.isActiveAndEnabled} cuerpo={region.GetComponent<Rigidbody2D>()?.bodyType.ToString() ?? "-"}");
                 Log.Info($"{Tag}activator {activatorObject.name} activado={activatedField?.GetValue(activator)} " +
                          $"encendido={activator.enabled} tocan=[{string.Join(", ", touching)}] zonas=[{string.Join("; ", regions)}]");
@@ -839,7 +838,7 @@ internal sealed class TestDriver : MonoBehaviour {
             case "moveenemy":
                 // moveenemy <inicio del nombre>|<x>|<y>: lleva ese enemigo (vivo y encendido) a ese punto, p. ej. bajo una liana
                 var moveArgs = string.Join(" ", args.Skip(1)).Split('|');
-                var moved = FindObjectsByType<HealthManager>(FindObjectsSortMode.None)
+                var moved = FindObjectsOfType<HealthManager>()
                     .FirstOrDefault(h => h.name.StartsWith(moveArgs[0]) && !h.GetIsDead());
                 if (moved == null) {
                     Log.Warn($"{Tag}no hay ningún enemigo vivo '{moveArgs[0]}'");
@@ -1079,7 +1078,7 @@ internal sealed class TestDriver : MonoBehaviour {
                 break;
             case "stagtravel":
                 // stagtravel <sala> <número de estación>: como elegir ese destino en el ciervo de esta sala
-                var stag = UnityEngine.Object.FindObjectsByType<PlayMakerFSM>(FindObjectsSortMode.None)
+                var stag = UnityEngine.Object.FindObjectsOfType<PlayMakerFSM>()
                     .FirstOrDefault(f => f.FsmName == "Stag Control");
                 if (stag == null) {
                     Log.Warn($"{Tag}no hay ciervo en esta sala");
@@ -1258,12 +1257,13 @@ internal sealed class TestDriver : MonoBehaviour {
             case "cinematic":
                 // Reproductores de vídeo de la escena: si su vídeo va, dónde se dibuja y cómo está el fundido de la cámara
                 var flagsAll = System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance;
-                foreach (var player in FindObjectsByType<CinematicPlayer>(FindObjectsInactive.Include, FindObjectsSortMode.None)) {
+                foreach (var player in FindObjectsOfType<CinematicPlayer>(true)) {
                     var video = player.GetComponents<Component>().FirstOrDefault(c => c.GetType().Name == "VideoPlayer");
                     var meshRenderer = player.GetComponent<MeshRenderer>();
+                    var cvp = typeof(CinematicPlayer).GetField("cinematicVideoPlayer", flagsAll)?.GetValue(player) as CinematicVideoPlayer;
                     Log.Info($"{Tag}vídeo {player.name} tipo={player.videoType} activo={player.isActiveAndEnabled} " +
                              $"disparado={typeof(CinematicPlayer).GetField("videoTriggered", flagsAll)?.GetValue(player)} " +
-                             $"reproduciendo={typeof(CinematicPlayer).GetField("isPlaying", flagsAll)?.GetValue(player)} " +
+                             $"reproduciendo={cvp?.IsPlaying} " +
                              $"malla={(meshRenderer != null && meshRenderer.enabled)} unity={(video != null ? $"{video.GetType().GetProperty("isPlaying")?.GetValue(video)} t={video.GetType().GetProperty("time")?.GetValue(video)}" : "-")} " +
                              $"pos={player.transform.position} capa={player.gameObject.layer}");
                 }
@@ -1295,7 +1295,7 @@ internal sealed class TestDriver : MonoBehaviour {
             case "senders":
                 // senders <evento>: FSM de la sala (también inactivas) que mandan ese aviso, con su estado y su destino
                 var wanted = string.Join(" ", args.Skip(1));
-                foreach (var fsm in FindObjectsByType<PlayMakerFSM>(FindObjectsInactive.Include, FindObjectsSortMode.None)) {
+                foreach (var fsm in FindObjectsOfType<PlayMakerFSM>(true)) {
                     foreach (var state in fsm.FsmStates) {
                         foreach (var action in state.Actions) {
                             var sent = action switch {
@@ -1315,7 +1315,7 @@ internal sealed class TestDriver : MonoBehaviour {
             case "listeners":
                 // listeners <evento>: FSM de la sala (también inactivas) que cambian de estado con ese aviso, con su estado
                 var heard = string.Join(" ", args.Skip(1));
-                foreach (var fsm in FindObjectsByType<PlayMakerFSM>(FindObjectsInactive.Include, FindObjectsSortMode.None)) {
+                foreach (var fsm in FindObjectsOfType<PlayMakerFSM>(true)) {
                     var where = fsm.FsmGlobalTransitions.Any(t => t.EventName == heard)
                         ? "global"
                         : fsm.FsmStates.FirstOrDefault(s => s.Transitions.Any(t => t.EventName == heard))?.Name;
@@ -1328,12 +1328,12 @@ internal sealed class TestDriver : MonoBehaviour {
                 break;
             case "langget":
                 // langget <hoja> <clave>: texto del juego en su idioma (p. ej. "Titles FALSE_KNIGHT_MAIN")
-                Log.Info($"{Tag}texto {args[1]}/{args[2]}=" + (TeamCherry.Localization.Language.Has(args[2], args[1])
-                    ? TeamCherry.Localization.Language.Get(args[2], args[1]) : "(no existe)"));
+                Log.Info($"{Tag}texto {args[1]}/{args[2]}=" + (Language.Language.Has(args[2], args[1])
+                    ? Language.Language.Get(args[2], args[1]) : "(no existe)"));
                 break;
             case "toggles":
                 // Objetos que el juego enciende o apaga según un sí/no (DeactivateIf*, ActivateIf*): dato, valor y si están encendidos
-                foreach (var toggle in FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include, FindObjectsSortMode.None)) {
+                foreach (var toggle in FindObjectsOfType<MonoBehaviour>(true)) {
                     var typeName = toggle.GetType().Name;
                     if (!typeName.StartsWith("DeactivateIfPlayerdata") && !typeName.StartsWith("ActivateIfPlayerdata")) {
                         continue;
@@ -1347,13 +1347,13 @@ internal sealed class TestDriver : MonoBehaviour {
                 break;
             case "langset":
                 // langset <código>: cambia el idioma del juego como desde el menú (p. ej. EN, ES, FR)
-                Log.Info($"{Tag}idioma {args[1]}: {TeamCherry.Localization.Language.SwitchLanguage(args[1])}");
+                Log.Info($"{Tag}idioma {args[1]}: {Language.Language.SwitchLanguage(args[1])}");
                 GameManager.instance.RefreshLocalization();
                 break;
             case "covers":
                 // Lo que se dibuja delante de la cámara y la tapa (grande, sobre su centro): máscaras de zonas ocultas...
                 var view = GameCameras.instance.mainCamera.transform.position;
-                foreach (var drawn in FindObjectsByType<Renderer>(FindObjectsSortMode.None)) {
+                foreach (var drawn in FindObjectsOfType<Renderer>()) {
                     var area = drawn.bounds;
                     if (!drawn.enabled || area.size.x < 4f || area.size.y < 3f || view.x < area.min.x || view.x > area.max.x ||
                         view.y < area.min.y || view.y > area.max.y) {
@@ -1370,7 +1370,7 @@ internal sealed class TestDriver : MonoBehaviour {
                 break;
             case "transitions":
                 // FSM de la sala con un cambio de sala (BeginSceneTransition): a qué sala, por qué puerta y cómo se ve
-                foreach (var fsm in FindObjectsByType<PlayMakerFSM>(FindObjectsInactive.Include, FindObjectsSortMode.None)) {
+                foreach (var fsm in FindObjectsOfType<PlayMakerFSM>(true)) {
                     foreach (var state in fsm.FsmStates) {
                         foreach (var action in state.Actions) {
                             if (action is HutongGames.PlayMaker.Actions.BeginSceneTransition transition) {
@@ -1610,10 +1610,10 @@ internal sealed class TestDriver : MonoBehaviour {
                              $"capas=[{string.Join(",", layers)}]");
                 }
 
-                var darknessCamera = FindObjectsByType<DarknessCameraEffect>(FindObjectsSortMode.None).FirstOrDefault()
-                    ?.GetComponent<Camera>();
+                var darknessCamera = Camera.allCameras.FirstOrDefault(c =>
+                    c.name.IndexOf("Darkness", StringComparison.OrdinalIgnoreCase) >= 0);
                 var darknessShown = 0;
-                foreach (var renderer in FindObjectsByType<Renderer>(FindObjectsSortMode.None)) {
+                foreach (var renderer in FindObjectsOfType<Renderer>()) {
                     var inDarkness = darknessCamera != null && (darknessCamera.cullingMask & 1 << renderer.gameObject.layer) != 0;
                     if (!inDarkness && renderer.transform.parent?.name != "Vignette" && renderer.name != "Vignette" ||
                         darknessShown++ >= 30) {
@@ -1742,7 +1742,7 @@ internal sealed class TestDriver : MonoBehaviour {
 
     /// <summary>Menú del mod que se está viendo.</summary>
     private static HKMultiplayer.UI.GameStyledMenu VisibleMenu() =>
-        FindObjectsByType<HKMultiplayer.UI.GameStyledMenu>(FindObjectsSortMode.None).FirstOrDefault(m => m.isActiveAndEnabled);
+        FindObjectsOfType<HKMultiplayer.UI.GameStyledMenu>().FirstOrDefault(m => m.isActiveAndEnabled);
 
     /// <summary>
     /// Un objeto por nombre o ruta: activo en la sala, o entre todo lo cargado (prefabs del pool, objetos inactivos). Antes
@@ -1804,8 +1804,8 @@ internal sealed class TestDriver : MonoBehaviour {
             return spawned;
         };
         // Quién apaga cada pieza de geo mientras dura el registro
-        On.GeoControl.OnDisable += (orig, self) => {
-            orig(self);
+        On.GeoControl.Disable += (orig, self, waitTime) => {
+            orig(self, waitTime);
             if (Time.unscaledTime < _spawnLogUntil) {
                 Log.Info($"{Tag}geo apagado {self.name} en {self.transform.position}: {Environment.StackTrace}");
             }
@@ -1816,7 +1816,7 @@ internal sealed class TestDriver : MonoBehaviour {
     private IEnumerator TraceEnemy(float seconds, string name) {
         var until = Time.unscaledTime + seconds;
         while (Time.unscaledTime < until) {
-            foreach (var health in FindObjectsByType<HealthManager>(FindObjectsSortMode.None)) {
+            foreach (var health in FindObjectsOfType<HealthManager>()) {
                 if (!health.name.StartsWith(name, StringComparison.Ordinal)) {
                     continue;
                 }
@@ -2012,7 +2012,7 @@ internal sealed class TestDriver : MonoBehaviour {
     private static IEnumerator FindMoving(float seconds) {
         var hero = HeroController.instance;
         var start = new Dictionary<Transform, (Vector3 Position, float Angle)>();
-        foreach (var collider in FindObjectsByType<Collider2D>(FindObjectsSortMode.None)) {
+        foreach (var collider in FindObjectsOfType<Collider2D>()) {
             var t = collider.transform;
             if (collider.gameObject.scene.buildIndex < 0 || HKMultiplayer.Game.Scene.EnemySync.IsEnemyObject(t) ||
                 hero != null && t.IsChildOf(hero.transform) || start.ContainsKey(t)) {
@@ -2050,7 +2050,7 @@ internal sealed class TestDriver : MonoBehaviour {
 
     private static IEnumerable<string> DescribeArenas() {
         var hero = HeroController.instance;
-        foreach (var fsm in FindObjectsByType<PlayMakerFSM>(FindObjectsInactive.Include, FindObjectsSortMode.None)) {
+        foreach (var fsm in FindObjectsOfType<PlayMakerFSM>(true)) {
             if (fsm.gameObject.scene.buildIndex < 0 || HKMultiplayer.Game.Scene.EnemySync.IsEnemyObject(fsm.transform) ||
                 hero != null && fsm.transform.IsChildOf(hero.transform)) {
                 continue;
@@ -2127,7 +2127,8 @@ internal sealed class TestDriver : MonoBehaviour {
                     var collider = go.GetComponent<Collider2D>();
                     var solid = collider != null && !collider.isTrigger;
                     if (renderer == null && !solid || go.name.Contains("(Clone)") || go.name.StartsWith("HKMultiplayer") ||
-                        t.GetComponentInParent<HealthManager>(true) != null || t.GetComponentInParent<HeroController>(true) != null ||
+                        t.GetComponentInParentCompat<HealthManager>(true) != null ||
+                        t.GetComponentInParentCompat<HeroController>(true) != null ||
                         renderer is ParticleSystemRenderer) {
                         continue;
                     }

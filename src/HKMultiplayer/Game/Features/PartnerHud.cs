@@ -75,7 +75,7 @@ internal sealed class PartnerHud {
         public int StatusKey = -1;
 
         /// <summary>Idioma con el que se escribió el estado: al cambiarlo se vuelve a escribir.</summary>
-        public TeamCherry.Localization.LanguageCode StatusLanguage;
+        public Language.LanguageCode StatusLanguage;
 
         public int Soul = -1;
     }
@@ -279,7 +279,7 @@ internal sealed class PartnerHud {
             : vitals != null && vitals.Zone != localZone && elsewhere && vitals.Zone != NoZone ? vitals.Zone : -2;
         // El texto también depende del idioma ("en Bocasucia" / "in Dirtmouth"): antes se quedaba en el de antes del
         // cambio hasta que el compañero cambiara de zona
-        var language = TeamCherry.Localization.Language.CurrentLanguage();
+        var language = Language.Language.CurrentLanguage();
         if (statusKey != slot.StatusKey || language != slot.StatusLanguage) {
             slot.StatusKey = statusKey;
             slot.StatusLanguage = language;

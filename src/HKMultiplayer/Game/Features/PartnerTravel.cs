@@ -398,7 +398,7 @@ internal sealed class PartnerTravel {
         hero.transform.position = position;
         var body = hero.GetComponent<Rigidbody2D>();
         if (body != null) {
-            body.linearVelocity = Vector2.zero;
+            body.velocity = Vector2.zero;
         }
 
         // Mirando hacia el compañero

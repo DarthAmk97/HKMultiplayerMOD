@@ -101,7 +101,6 @@ internal static class CoopSaves {
         cameras.DisableImageEffects();
         PlayMakerFSM.BroadcastEvent("START FADE OUT");
         gm.ui.SetState(UIState.CUTSCENE);
-        gm.RegisterSkippable(opening);
         if (chain != null) {
             chain.Begin();
             while (chain.IsPlaying) {
@@ -115,7 +114,6 @@ internal static class CoopSaves {
         }
 
         gm.inputHandler.SetSkipMode(SkipPromptMode.NOT_SKIPPABLE);
-        gm.DeregisterSkippable(opening);
         _introPlaying = false;
         Log.Info("Introducción terminada: entrando en el mundo del host");
         gm.ContinueGame();
@@ -271,7 +269,7 @@ internal static class CoopSaves {
                 return;
             }
 
-            playerData.SetString("version", "1.5.12620");
+            playerData.SetString("version", Constants.GAME_VERSION);
             playerData.CountGameCompletion();
             WorldStore.Save(world, new SaveGameData(playerData, self.sceneData));
             Log.Info($"Mundo coop guardado: {world.Name}");

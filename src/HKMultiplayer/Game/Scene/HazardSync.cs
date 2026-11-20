@@ -220,7 +220,7 @@ internal sealed class HazardSync {
     /// <summary>Animados con algo que daña o que es sólido (lo que se puede tocar), sin enemigos ni el caballero.</summary>
     private void Scan() {
         var hero = HeroController.instance;
-        foreach (var animator in Object.FindObjectsByType<Animator>(FindObjectsSortMode.None)) {
+        foreach (var animator in Object.FindObjectsOfType<Animator>()) {
             var transform = animator.transform;
             if (animator.gameObject.scene.buildIndex < 0 || EnemySync.IsEnemyObject(transform) ||
                 hero != null && transform.IsChildOf(hero.transform) || !Touchable(animator)) {
@@ -247,7 +247,7 @@ internal sealed class HazardSync {
             _hazards.RemoveRange(MaxHazards, _hazards.Count - MaxHazards);
         }
 
-        foreach (var fsm in Object.FindObjectsByType<PlayMakerFSM>(FindObjectsSortMode.None)) {
+        foreach (var fsm in Object.FindObjectsOfType<PlayMakerFSM>()) {
             if (fsm.FsmName == DriftFsm && fsm.gameObject.scene.buildIndex >= 0 && _drifters.Count < MaxHazards) {
                 var driftId = ScenePaths.StableHash(fsm.transform);
                 if (!_drifterById.ContainsKey(driftId)) {
@@ -275,7 +275,7 @@ internal sealed class HazardSync {
             _cyclicById[id] = fsm;
         }
 
-        foreach (var centipede in Object.FindObjectsByType<BigCentipede>(FindObjectsSortMode.None)) {
+        foreach (var centipede in Object.FindObjectsOfType<BigCentipede>()) {
             if (_burrowers.Count >= MaxHazards || centipede.gameObject.scene.buildIndex < 0) {
                 continue;
             }

@@ -18,10 +18,10 @@ namespace HKMultiplayer.Game;
 /// </summary>
 internal static class UpdateCheck {
     /// <summary>Página de las versiones (para descargar a mano).</summary>
-    public const string ReleasesPage = "https://github.com/Yesid-Robayo/HKMultiplayerMOD/releases";
+    public const string ReleasesPage = "https://github.com/DarthAmk97/HKMultiplayerMOD/releases";
 
     // Todas se publican como pre-release, así que no sirve "latest": se mira la lista
-    private const string ReleasesApi = "https://api.github.com/repos/Yesid-Robayo/HKMultiplayerMOD/releases?per_page=20";
+    private const string ReleasesApi = "https://api.github.com/repos/DarthAmk97/HKMultiplayerMOD/releases?per_page=20";
 
     private const int TimeoutSeconds = 10;
 

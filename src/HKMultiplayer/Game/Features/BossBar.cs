@@ -5,7 +5,7 @@ using System.Text.RegularExpressions;
 using HKMultiplayer.UI;
 using UnityEngine;
 using UnityEngine.UI;
-using GameText = TeamCherry.Localization.Language;
+using GameText = Language.Language;
 
 namespace HKMultiplayer.Game.Features;
 
@@ -80,7 +80,7 @@ internal sealed class BossBar {
         _tracked.Clear();
 
         // Los que ya estaban encendidos al empezar la partida (una vez)
-        foreach (var health in Object.FindObjectsByType<HealthManager>(FindObjectsSortMode.None)) {
+        foreach (var health in Object.FindObjectsOfType<HealthManager>()) {
             Track(health);
         }
     }

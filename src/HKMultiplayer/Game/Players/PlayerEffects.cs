@@ -623,7 +623,7 @@ internal sealed class PlayerEffects {
                     effect.Scale = transform.localScale.x;
                     var body = spawned.GetComponent<Rigidbody2D>();
                     if (body != null) {
-                        var velocity = body.linearVelocity;
+                        var velocity = body.velocity;
                         effect.VX = velocity.x;
                         effect.VY = velocity.y;
                         effect.Spin = body.angularVelocity;

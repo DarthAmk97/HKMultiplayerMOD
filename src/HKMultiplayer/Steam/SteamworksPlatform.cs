@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using HKMultiplayer.Net;
 using HKMultiplayer.Util;
 using Steamworks;
@@ -12,7 +11,7 @@ namespace HKMultiplayer.Steam;
 /// SteamAPI.RunCallbacks en cada frame, que es lo que entrega aquí los avisos (salas, invitaciones, peticiones de
 /// conexión).
 /// <para>
-/// La conexión usa SteamNetworkingMessages: mensajes sin garantía de entrega entre cuentas, como UDP, que Steam lleva
+/// La conexión usa SteamNetworking (P2P): mensajes sin garantía de entrega entre cuentas, como UDP, que Steam lleva
 /// directo o por sus relés si el router no deja (así nadie tiene que abrir puertos). La fiabilidad y el cifrado con el
 /// código de la partida siguen siendo los del mod.
 /// </para>
@@ -20,20 +19,16 @@ namespace HKMultiplayer.Steam;
 internal sealed class SteamworksPlatform : ISteamPlatform {
     private const uint HollowKnightAppId = 367520;
 
-    /// <summary>Sin agrupar mensajes (cada tick sale al momento) y reabriendo la sesión si Steam la cerró.</summary>
-    private const int SendFlags = Steamworks.Constants.k_nSteamNetworkingSend_UnreliableNoNagle |
-                                  Steamworks.Constants.k_nSteamNetworkingSend_AutoRestartBrokenSession;
-
     private const int Channel = 0;
     private const int MaxLobbyMembers = 4;
 
-    private readonly IntPtr[] _messages = new IntPtr[1];
+    /// <summary>Búfer fijo reutilizable para enviar sin crear memoria cuando offset != 0.</summary>
+    private readonly byte[] _sendBuffer = new byte[NetConstants.MaxDatagramSize];
 
-    /// <summary>Búfer fijo fuera del recolector para enviar sin crear nada por paquete.</summary>
-    private readonly IntPtr _sendBuffer = Marshal.AllocHGlobal(NetConstants.MaxDatagramSize);
+    private readonly byte[] _discardBuffer = new byte[4096];
 
     private readonly HashSet<ulong> _expected = new();
-    private readonly Callback<SteamNetworkingMessagesSessionRequest_t> _sessionRequest;
+    private readonly Callback<P2PSessionRequest_t> _sessionRequest;
     private readonly Callback<GameLobbyJoinRequested_t> _joinRequested;
     private readonly Callback<GameRichPresenceJoinRequested_t> _presenceJoinRequested;
     private readonly CallResult<LobbyCreated_t> _lobbyCreated;
@@ -49,7 +44,7 @@ internal sealed class SteamworksPlatform : ISteamPlatform {
 
     private SteamworksPlatform(ulong localId) {
         LocalId = localId;
-        _sessionRequest = Callback<SteamNetworkingMessagesSessionRequest_t>.Create(OnSessionRequest);
+        _sessionRequest = Callback<P2PSessionRequest_t>.Create(OnSessionRequest);
         _joinRequested = Callback<GameLobbyJoinRequested_t>.Create(request => {
             Log.Info("Steam: invitación o \"Unirse\" a una partida de un amigo");
             JoinRequested?.Invoke(request.m_steamIDLobby.m_SteamID);
@@ -79,43 +74,12 @@ internal sealed class SteamworksPlatform : ISteamPlatform {
             }
 
             Log.Info("Steam disponible: salas e invitaciones de Steam activas");
-            // Prepara ya los relés de Steam: si no, la primera conexión espera a que se preparen
-            SteamNetworkingUtils.InitRelayNetworkAccess();
-            AllowLargeTransfers();
+            SteamNetworking.AllowP2PPacketRelay(true);
             return new SteamworksPlatform(id.m_SteamID);
-        } catch (InvalidOperationException) {
+        } catch (Exception e) when (e is InvalidOperationException or DllNotFoundException or EntryPointNotFoundException) {
             // El juego no inició Steam (p. ej. abierto sin Steam)
             Log.Info("Steam no se inició en el juego: solo conexión por IP");
             return null;
-        }
-    }
-
-    /// <summary>Ritmo de envío más alto que deja Steam por conexión (por defecto, 1 MB/s).</summary>
-    private const int MaxSendRate = 4 * 1024 * 1024;
-
-    /// <summary>Lo que Steam guarda para enviar antes de descartar (por defecto, 512 KB).</summary>
-    private const int SendBuffer = 2 * 1024 * 1024;
-
-    /// <summary>
-    /// Deja que Steam envíe tan rápido como la red del mod: el mundo al unirse y las skins salen a unos 2-2,6 MB/s, y
-    /// con el tope de Steam por defecto se quedaban en 1 MB/s y, con su búfer lleno, Steam descartaba paquetes que luego
-    /// había que repetir. Steam sigue bajando el ritmo solo si la conexión no da para más.
-    /// </summary>
-    private static void AllowLargeTransfers() {
-        SetGlobal(ESteamNetworkingConfigValue.k_ESteamNetworkingConfig_SendRateMax, MaxSendRate);
-        SetGlobal(ESteamNetworkingConfigValue.k_ESteamNetworkingConfig_SendBufferSize, SendBuffer);
-    }
-
-    private static void SetGlobal(ESteamNetworkingConfigValue setting, int value) {
-        var argument = Marshal.AllocHGlobal(sizeof(int));
-        try {
-            Marshal.WriteInt32(argument, value);
-            if (!SteamNetworkingUtils.SetConfigValue(setting, ESteamNetworkingConfigScope.k_ESteamNetworkingConfig_Global,
-                    IntPtr.Zero, ESteamNetworkingConfigDataType.k_ESteamNetworkingConfig_Int32, argument)) {
-                Log.Warn($"Steam no aceptó el ajuste de red {setting} = {value}");
-            }
-        } finally {
-            Marshal.FreeHGlobal(argument);
         }
     }
 
@@ -123,39 +87,34 @@ internal sealed class SteamworksPlatform : ISteamPlatform {
     // Mensajes
     // =====================================================================================================
 
-    private static SteamNetworkingIdentity Identity(ulong peer) {
-        var identity = new SteamNetworkingIdentity();
-        identity.SetSteamID(new CSteamID(peer));
-        return identity;
-    }
-
     public void Send(ulong peer, byte[] buffer, int offset, int length) {
-        if (_disposed || length > NetConstants.MaxDatagramSize) {
+        if (_disposed || length <= 0 || length > NetConstants.MaxDatagramSize) {
             return;
         }
 
-        Marshal.Copy(buffer, offset, _sendBuffer, length);
-        var identity = Identity(peer);
-        SteamNetworkingMessages.SendMessageToUser(ref identity, _sendBuffer, (uint) length, SendFlags, Channel);
+        byte[] data;
+        if (offset == 0) {
+            data = buffer;
+        } else {
+            Buffer.BlockCopy(buffer, offset, _sendBuffer, 0, length);
+            data = _sendBuffer;
+        }
+
+        SteamNetworking.SendP2PPacket(new CSteamID(peer), data, (uint) length, EP2PSend.k_EP2PSendUnreliableNoDelay, Channel);
     }
 
     public int Receive(byte[] buffer, out ulong from) {
         from = 0;
-        while (!_disposed && SteamNetworkingMessages.ReceiveMessagesOnChannel(Channel, _messages, 1) > 0) {
-            var pointer = _messages[0];
-            try {
-                var message = Marshal.PtrToStructure<SteamNetworkingMessage_t>(pointer);
-                var length = message.m_cbSize;
-                if (length <= 0 || length > buffer.Length) {
-                    // No cabe en un datagrama del mod: no es nuestro o viene mal hecho
-                    continue;
-                }
+        while (!_disposed && SteamNetworking.IsP2PPacketAvailable(out var size, Channel)) {
+            if (size == 0 || size > buffer.Length) {
+                var sink = size <= _discardBuffer.Length ? _discardBuffer : new byte[size];
+                SteamNetworking.ReadP2PPacket(sink, (uint) sink.Length, out _, out _, Channel);
+                continue;
+            }
 
-                from = message.m_identityPeer.GetSteamID().m_SteamID;
-                Marshal.Copy(message.m_pData, buffer, 0, length);
-                return length;
-            } finally {
-                SteamNetworkingMessage_t.Release(pointer);
+            if (SteamNetworking.ReadP2PPacket(buffer, (uint) buffer.Length, out var read, out var remote, Channel) && read > 0) {
+                from = remote.m_SteamID;
+                return (int) read;
             }
         }
 
@@ -166,12 +125,11 @@ internal sealed class SteamworksPlatform : ISteamPlatform {
     /// Alguien quiere hablar con este jugador. Solo se acepta a amigos, a los de la sala y al host al que se une: un
     /// desconocido ni siquiera llega al saludo de la conexión (que además pide el código).
     /// </summary>
-    private void OnSessionRequest(SteamNetworkingMessagesSessionRequest_t request) {
-        var identity = request.m_identityRemote;
-        var peer = identity.GetSteamID();
+    private void OnSessionRequest(P2PSessionRequest_t request) {
+        var peer = request.m_steamIDRemote;
         if (_expected.Contains(peer.m_SteamID) || InLobby(peer) ||
             SteamFriends.GetFriendRelationship(peer) == EFriendRelationship.k_EFriendRelationshipFriend) {
-            SteamNetworkingMessages.AcceptSessionWithUser(ref identity);
+            SteamNetworking.AcceptP2PSessionWithUser(peer);
         } else {
             Log.Info("Steam: petición de conexión de alguien que no es amigo ni está en la sala, ignorada");
         }
@@ -317,6 +275,5 @@ internal sealed class SteamworksPlatform : ISteamPlatform {
         _presenceJoinRequested.Dispose();
         _lobbyCreated.Dispose();
         _lobbyEntered.Dispose();
-        Marshal.FreeHGlobal(_sendBuffer);
     }
 }

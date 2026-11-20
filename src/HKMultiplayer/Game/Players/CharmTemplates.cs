@@ -426,7 +426,7 @@ internal sealed class CharmTemplates {
         var body = prefab.GetComponent<Rigidbody2D>();
         if (body != null) {
             info.GravityScale = body.gravityScale;
-            info.Drag = body.linearDamping;
+            info.Drag = body.drag;
         }
 
         var bounce = prefab.GetComponent<ObjectBounce>();

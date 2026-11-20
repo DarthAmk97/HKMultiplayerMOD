@@ -21,8 +21,8 @@ internal sealed class Release {
 /// cartel de versión nueva y el botón "Novedades" de la ventana salen de aquí.
 /// </summary>
 internal static class Releases {
-    internal const string ApiUrl = "https://api.github.com/repos/Yesid-Robayo/HKMultiplayerMOD/releases?per_page=20";
-    internal const string PageUrl = "https://github.com/Yesid-Robayo/HKMultiplayerMOD/releases";
+    internal const string ApiUrl = "https://api.github.com/repos/DarthAmk97/HKMultiplayerMOD/releases?per_page=20";
+    internal const string PageUrl = "https://github.com/DarthAmk97/HKMultiplayerMOD/releases";
 
     internal static WebClient NewClient(string packageVersion) {
         ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12;

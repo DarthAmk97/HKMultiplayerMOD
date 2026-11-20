@@ -248,8 +248,7 @@ internal sealed class DreamSync {
             return;
         }
 
-        foreach (var fsm in UnityEngine.Object.FindObjectsByType<PlayMakerFSM>(FindObjectsInactive.Include,
-                     FindObjectsSortMode.None)) {
+        foreach (var fsm in UnityEngine.Object.FindObjectsOfType<PlayMakerFSM>(true)) {
             if (fsm.gameObject.scene.buildIndex < 0 || Contains(fsm) || fsm.gameObject.name == FallCatcherName) {
                 continue;
             }

@@ -8,8 +8,8 @@
 #   files/hollow_knight_Data/Managed/          la Modding API compilada (vendor/modding-api/OutputFinal) y
 #                                              Mods/HKMultiplayer (el mod y su cifrado, BouncyCastle)
 #   SHA256SUMS.txt                             hashes de files/: el instalador comprueba el paquete y lo copiado
-# Nada más del juego de Team Cherry: solo los dos ensamblados que parchea la Modding API (Assembly-CSharp.dll y
-# TeamCherry.Localization.dll), que forman parte de ella.
+# Nada más del juego de Team Cherry: solo el ensamblado que parchea la Modding API (Assembly-CSharp.dll), que forma
+# parte de ella junto con sus dependencias (como mscorlib.dll).
 # Uso: bash tools/package.sh   (compila el mod en Release antes de empaquetar)
 set -euo pipefail
 

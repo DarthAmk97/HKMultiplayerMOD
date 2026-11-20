@@ -1,6 +1,4 @@
-using Mono.Cecil.Cil;
 using MonoMod;
-using MonoMod.Cil;
 using UnityEngine;
 
 #pragma warning disable 1591
@@ -12,25 +10,41 @@ namespace Modding.Patches
     public class InputHandler : global::InputHandler
     {
         [MonoModIgnore]
-        [Attributes.RawIlPatch(nameof(IlPatches.InputHandler_OnGUI))]
-        extern private void OnGUI();
-    }
+        private bool isTitleScreenScene;
 
-    public static partial class IlPatches
-    {
         [MonoModIgnore]
-        public static void InputHandler_OnGUI(ILContext il)
-        {
-            // add a `Cursor.lockState = CursorLockMode.None;` before every (4) `ret`
-            ILCursor cursor = new ILCursor(il);
+        private bool isMenuScene;
 
-            // Insert a call to your custom method
-            while (cursor.TryGotoNext(MoveType.AfterLabel, x => x.MatchRet()))
+        [MonoModIgnore]
+        private bool controllerPressed;
+
+        [MonoModIgnore]
+        private GameManager gm;
+
+        // Reverted cursor behavior
+        [MonoModReplace]
+        private void OnGUI()
+        {
+            Cursor.lockState = CursorLockMode.None;
+            if (isTitleScreenScene)
             {
-                cursor.Emit(OpCodes.Ldc_I4, CursorLockMode.None);
-                cursor.Emit(OpCodes.Call, ReflectionHelper.GetMethodInfo(typeof(global::UnityEngine.Cursor), "set_lockState", false));
-                cursor.GotoNext();
+                Cursor.visible = false;
+                return;
             }
+
+            if (!isMenuScene)
+            {
+                ModHooks.OnCursor(gm);
+                return;
+            }
+
+            if (controllerPressed)
+            {
+                Cursor.visible = false;
+                return;
+            }
+
+            Cursor.visible = true;
         }
     }
 }

@@ -629,7 +629,7 @@ internal sealed class ShadeSync {
     }
 
     private static HealthManager FindOwnShade() {
-        foreach (var health in Object.FindObjectsByType<HealthManager>(FindObjectsSortMode.None)) {
+        foreach (var health in Object.FindObjectsOfType<HealthManager>()) {
             if (health.gameObject.name.StartsWith("Hollow Shade", System.StringComparison.Ordinal) &&
                 !Copies.ContainsKey(health.gameObject)) {
                 return health;

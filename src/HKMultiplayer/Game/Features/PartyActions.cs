@@ -226,7 +226,7 @@ internal sealed class PartyActions {
         hero.transform.position = target;
         var body = hero.GetComponent<Rigidbody2D>();
         if (body != null) {
-            body.linearVelocity = Vector2.zero;
+            body.velocity = Vector2.zero;
         }
 
         Notice.Show(Lang.T("Volviste al último suelo seguro", "You went back to the last safe ground"), 3f);

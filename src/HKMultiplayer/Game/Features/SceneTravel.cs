@@ -24,9 +24,6 @@ internal sealed class SceneTravel {
         "FinishedEnteringScene", BindingFlags.NonPublic | BindingFlags.Instance, null, new[] { typeof(bool), typeof(bool) },
         null);
 
-    private static readonly MethodInfo SendHeroInPositionMethod =
-        typeof(HeroController).GetMethod("SendHeroInPosition", BindingFlags.NonPublic | BindingFlags.Instance);
-
     private string _target;
     private Vector3 _position;
     private float _startedAt;
@@ -128,7 +125,7 @@ internal sealed class SceneTravel {
         }
 
         try {
-            SendHeroInPositionMethod?.Invoke(hero, new object[] { true });
+            UnityCompat.SendHeroInPosition(hero, true);
         } catch (Exception e) {
             Log.Warn($"SendHeroInPosition falló: {e.Message}");
         }

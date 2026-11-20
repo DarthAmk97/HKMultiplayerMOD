@@ -72,18 +72,26 @@ internal sealed class PantheonTogether {
         _hooked = true;
         // Volver al Atrio por la puerta de un Panteón (al morir dentro): el juego entra por "door_dreamReturn" y luego la
         // cambia por la de esa puerta (bossReturnEntryGate), pero la puerta solo enciende su lado abierto (donde está la
-        // vuelta) si el Panteón está desbloqueado o si se entra por ella, y lo mira antes del cambio. Jugando solo siempre
-        // lo está; aquí se entra con el compañero que lo empezó, y quien no lo tenía desbloqueado no encontraba la puerta:
-        // se quedaba tumbado entrando en la sala para siempre y el juego lo seguía dando por dentro del Panteón
-        On.BossSequenceDoor.IsEnteringFromGate += (orig, self) => {
-            if (orig(self)) {
-                return true;
-            }
-
+        // vuelta) si el Panteón está desbloqueado. Jugando solo siempre lo está; aquí se entra con el compañero que lo
+        // empezó, y quien no lo tenía desbloqueado no encontraba la puerta: se quedaba tumbado entrando en la sala para
+        // siempre y el juego lo seguía dando por dentro del Panteón (en 1.5.68 no existe IsEnteringFromGate).
+        On.BossSequenceDoor.Start += (orig, self) => {
+            orig(self);
             var gm = GameManager.instance;
             var pd = PlayerData.instance;
-            return _active != null && gm != null && pd != null && self.dreamReturnGate != null &&
-                   gm.GetEntryGateName() == "door_dreamReturn" && pd.GetString("bossReturnEntryGate") == self.dreamReturnGate.name;
+            if (_active != null && gm != null && pd != null && self.dreamReturnGate != null &&
+                gm.GetEntryGateName() == "door_dreamReturn" &&
+                pd.GetString("bossReturnEntryGate") == self.dreamReturnGate.name) {
+                if (self.lockSet != null) {
+                    self.lockSet.SetActive(false);
+                }
+
+                if (self.unlockedSet != null) {
+                    self.unlockedSet.SetActive(true);
+                }
+
+                self.dreamReturnGate.SetActive(true);
+            }
         };
 
         // El botón de empezar del cuadro de la puerta: la secuencia ya está preparada al volver
@@ -283,7 +291,7 @@ internal sealed class PantheonTogether {
     }
 
     private static BossSequenceDoor FindDoor(string scene, string doorName) {
-        foreach (var candidate in Object.FindObjectsByType<BossSequenceDoor>(FindObjectsSortMode.None)) {
+        foreach (var candidate in Object.FindObjectsOfType<BossSequenceDoor>()) {
             if (candidate.name == doorName && candidate.gameObject.scene.name == scene) {
                 return candidate;
             }
