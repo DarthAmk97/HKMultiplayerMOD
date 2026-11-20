@@ -27,6 +27,12 @@ Rick Knight (con su HUD). Hollow Knight es de Team Cherry.</sub>
 > [Estado de las pruebas](#-estado-de-las-pruebas)). **Puede tener errores.** Haz una copia de tus partidas antes de
 > jugar y, si algo falla, cuéntalo en un *issue* con una captura y tu `ModLog.txt`.
 
+> [!IMPORTANT]
+> **Fork para Hollow Knight `1.5.68.11808` (Unity `2020.2.2f1`).** Esta rama (`hk-1.5.68.11808`) adapta
+> [Yesid-Robayo/HKMultiplayerMOD](https://github.com/Yesid-Robayo/HKMultiplayerMOD) `v0.36.2` a **Hollow Knight
+> `1.5.68.11808` en Windows**, usando `hk-modding/api` (`1.5.78.11833-77`) y `SteamNetworking` P2P. La rama `main`
+> sigue el código original de `1.5.12620` (Unity 6).
+
 Un jugador **hostea** un mundo coop y sus compañeros **se unen** por **Steam** (con una invitación o con *Unirse a la
 partida*, sin abrir puertos) o con la dirección del host y el código de la partida:
 comparten el mundo, se ven en tiempo real y pelean juntos contra los mismos enemigos y jefes. Hasta 4 jugadores,
@@ -236,7 +242,14 @@ escrito desde cero sobre la Modding API de Hollow Knight.
 
 ## 🧪 Estado de las pruebas
 
-✅ **Confirmado:**
+### Esta adaptación a `1.5.68.11808`
+
+- ✅ **Confirmado en `1.5.68.11808`:** compilación en Release (`0` advertencias, `0` errores), `tests/NetTests` (`42/42` pruebas de transporte, sesión y bucle de Steam), verificación `/install` y `/uninstall` del instalador y arranque en vivo hasta el menú principal (`Modding API: 1.5.68.11808-77`, `HKMultiplayer : 0.36.2`, menú Multijugador añadido en el menú principal y de pausa con `0` errores en `ModLog.txt`).
+- ❓ **Aún sin confirmar en vivo en `1.5.68.11808`:** partidas cooperativas en vivo entre varios PCs y salas/invitaciones P2P con `SteamNetworking` entre clientes reales.
+
+### Base original (`1.5.12620`)
+
+✅ **Confirmado (en el proyecto original `1.5.12620`):**
 
 - Conexión, mundos coop y personajes de los invitados.
 - Enemigos de todas las zonas.
@@ -281,10 +294,12 @@ Más detalle en [docs/arquitectura.md](docs/arquitectura.md#limitaciones-conocid
 > jugadores tienen que tener **la misma versión** de HKMultiplayer. Mac y Linux no son compatibles, y la versión de
 > Xbox/Game Pass no está probada.
 
-1. Descarga `HKMultiplayer-<versión>.zip` de la página de [*Releases*](../../releases).
+1. Consigue `HKMultiplayer-0.36.2.zip`:
+   - Si hay un paquete publicado en la página de [*Releases*](https://github.com/DarthAmk97/HKMultiplayerMOD/releases) de este fork (o si te lo pasa el host), descárgalo.
+   - Si todavía no hay ningún zip en *Releases*, compila `out/package/HKMultiplayer-0.36.2.zip` en local siguiendo [Compilar (también en otro PC)](#compilar-también-en-otro-pc) más abajo y comparte ese zip con tus amigos en `1.5.68.11808`.
 2. Cierra el juego, **descomprime el zip entero** y haz doble clic en **`HKMultiplayer Setup.exe`**.
 3. En la ventana que se abre, comprueba la carpeta del juego y pulsa **Instalar**.
-4. Abre Hollow Knight desde Steam: en el menú principal aparece **Multijugador**.
+4. Abre Hollow Knight (desde Steam para salas e invitaciones de Steam, o directamente si juegas por IP): en el menú principal aparece **Multijugador**.
 
 Windows puede avisar al abrir un archivo descargado de internet: pulsa *Ejecutar* (o *Más información › Ejecutar de
 todas formas*). El instalador es de código abierto: su código está en [`tools/installer/launcher`](tools/installer/launcher).
@@ -413,16 +428,35 @@ Las DLL del juego son de Team Cherry y no están en el repositorio: se sacan del
 
 ### Compilar (también en otro PC)
 
-Necesitas Hollow Knight 1.5.68.11808 instalado, el SDK de .NET (`dotnet`) y Git Bash.
+Requisitos: **Windows**, **Hollow Knight `1.5.68.11808`** (la carpeta `Managed` sin modificar, o una copia previa en
+`HKMultiplayer-backup`), el **SDK de .NET 8** (`dotnet`), **Git para Windows** (Git Bash + `curl`) y **conexión a
+internet en la primera ejecución** (para restaurar paquetes NuGet y descargar `override/mscorlib.{dll,xml}` de
+`hk-modding/api@1.5.78.11833-77`).
 
 ```bash
+# 1. Clona el repositorio (usa hk-1.5.68.11808 por defecto en el fork; pasa -b hk-1.5.68.11808 si hace falta)
 git clone -b hk-1.5.68.11808 https://github.com/DarthAmk97/HKMultiplayerMOD.git
 cd HKMultiplayerMOD
-bash tools/setup-dev.sh "D:/Games/Hollow Knight"   # una vez (o la carpeta de tu juego)
-bash tools/test-cycle.sh --game "D:/Games/Hollow Knight"     # compila el mod y lo instala en el juego
-dotnet run --project tests/NetTests # pruebas del transporte
-bash tools/package.sh               # paquete para jugadores: out/package/HKMultiplayer-<versión>.zip
+
+# 2. Prepara las DLL originales y compila la Modding API una vez (usa la carpeta de tu juego)
+bash tools/setup-dev.sh "C:/ruta/a/Hollow Knight"
+
+# 3. Compila HKMultiplayer + el instalador y crea out/package/HKMultiplayer-0.36.2.zip
+bash tools/package.sh
+
+# 4. Ejecuta las pruebas de transporte y sesión fuera del juego (opcional)
+dotnet run --project tests/NetTests -c Release
 ```
+
+- **Primera instalación (instala tanto la Modding API como HKMultiplayer):** descomprime
+  `out/package/HKMultiplayer-0.36.2.zip` y ejecuta `HKMultiplayer Setup.exe` (o en consola:
+  `start /wait "" "HKMultiplayer Setup.exe" /install "C:\ruta\a\Hollow Knight"`).
+- **Recompilaciones rápidas posteriores** (cuando la Modding API ya está instalada en el juego):
+  ```bash
+  bash tools/test-cycle.sh --game "C:/ruta/a/Hollow Knight"
+  ```
+  (`test-cycle.sh` solo compila `HKMultiplayer` y copia `Mods/HKMultiplayer/*`, así que no te saltes `package.sh` +
+  `HKMultiplayer Setup.exe` en un juego sin Modding API.)
 
 `setup-dev.sh` copia la carpeta `Managed` del juego **sin modificar** a `modding-api/Vanilla`, compila la Modding API
 y deja `lib/` y `vendor/`. Si el juego ya tiene la Modding API, usa los originales que guardó el instalador
@@ -448,14 +482,17 @@ Modding API se edita `modding-api/` y se vuelve a ejecutar.
 
 ## ☕ Apoyar el proyecto
 
-HKMultiplayer es gratis y lo hace una sola persona. Si te gusta y quieres apoyarlo, puedes invitarme a un café en
-**[Ko-fi](https://ko-fi.com/yesidrobayo)**. No es obligatorio: avisar de errores con tu `ModLog.txt` también ayuda mucho.
+HKMultiplayer fue creado originalmente y publicado gratis por Yesid Robayo. Si te gusta y quieres apoyarlo, puedes apoyar
+al creador original (Yesid Robayo) en **[Ko-fi](https://ko-fi.com/yesidrobayo)**. No es obligatorio: avisar de errores
+con tu `ModLog.txt` también ayuda mucho.
 
 ## 📄 Licencia y contribuciones
 
 - El código de HKMultiplayer tiene licencia **[MIT](LICENSE)**. Se entrega **tal cual, sin ninguna garantía**: úsalo
   bajo tu propia responsabilidad y haz copia de tus partidas. La Modding API de [`modding-api/`](modding-api) mantiene
   su propia licencia MIT.
-- **No se aceptan *pull requests*** (se cierran automáticamente). Los errores y las ideas, en un *issue*; ver
-  [CONTRIBUTING.md](CONTRIBUTING.md).
+- **El repositorio original no acepta *pull requests***:
+  [Yesid-Robayo/HKMultiplayerMOD](https://github.com/Yesid-Robayo/HKMultiplayerMOD) los cierra automáticamente (heredado
+  en `.github/workflows/close-pull-requests.yml`; ver [CONTRIBUTING.md](CONTRIBUTING.md)). Este fork mantiene la
+  adaptación a Hollow Knight `1.5.68.11808` en la rama `hk-1.5.68.11808`.
 - Los problemas de seguridad se avisan en privado: [SECURITY.md](SECURITY.md).
