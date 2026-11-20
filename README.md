@@ -289,16 +289,17 @@ More detail (in Spanish) in [docs/arquitectura.md](docs/arquitectura.md#limitaci
 > You need **Hollow Knight 1.5.68.11808 on Windows** (Unity `2020.2.2f1`; this branch is ported from upstream's `1.5.12620` Unity 6 release). All players must have
 > **the same version** of HKMultiplayer. Mac and Linux are not supported, and the Xbox/Game Pass version is not tested.
 
-1. Get `HKMultiplayer-0.36.2.zip`:
-   - If a prebuilt package is published on the fork's [*Releases*](https://github.com/DarthAmk97/HKMultiplayerMOD/releases) page (or shared with you by the host), download it.
-   - If *Releases* does not have a zip yet, build `out/package/HKMultiplayer-0.36.2.zip` locally using [Building (also on another PC)](#building-also-on-another-pc) below, then share that zip with your friends on `1.5.68.11808`.
-2. Close the game, **extract the whole zip**, and double-click **`HKMultiplayer Setup.exe`**.
-3. In the window that opens, check the game folder and click **Install**.
+1. Download **`HKMultiplayer-0.36.2.zip`** from the [*Releases*](https://github.com/DarthAmk97/HKMultiplayerMOD/releases) page under the **`v0.36.2`** pre-release *(or build it from source via [Building (also on another PC)](#building-also-on-another-pc))*.
+2. Close Hollow Knight completely, then **extract the whole zip** into a normal folder (right-click › *Extract All…* — **do not** run `HKMultiplayer Setup.exe` from inside the `.zip`).
+3. Open the extracted `HKMultiplayer-0.36.2` folder and double-click **`HKMultiplayer Setup.exe`**:
+   - If Windows SmartScreen warns you (*"Windows protected your PC"*), click *More info › Run anyway* (the installer is unsigned; its source is in [`tools/installer/launcher`](tools/installer/launcher)).
+   - Confirm the game folder points to your **Hollow Knight `1.5.68.11808`** folder (click **Browse…** if it is in a custom path such as `D:\Games\Hollow Knight`) and click **Install**. *(If Windows denies write access, right-click `HKMultiplayer Setup.exe` › Run as administrator.)*
 4. Open Hollow Knight (from Steam for Steam lobbies/invites, or directly if playing by IP): **Multiplayer** appears in the main menu.
 
-Windows may warn you when opening a file downloaded from the internet: click *Run* (or *More info › Run anyway*). The
-installer is open source: its code is in [`tools/installer/launcher`](tools/installer/launcher). If you'd rather not use
-it, install by hand (below).
+> [!TIP]
+> - Keep the extracted folder (or the zip): opening the same `HKMultiplayer Setup.exe` and clicking **Uninstall** restores your original game files from `<game>\HKMultiplayer-backup`.
+> - Share the exact same `HKMultiplayer-0.36.2.zip` with your friends on Hollow Knight `1.5.68.11808` — all players must run the same version of HKMultiplayer.
+> - Prefer not to run the `.exe`? Extract the zip and follow the **Install by hand** steps in `README.txt` (`LEEME.txt` in Spanish) inside the folder.
 
 <details>
 <summary><b>What the installer does</b></summary>

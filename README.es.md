@@ -294,16 +294,17 @@ Más detalle en [docs/arquitectura.md](docs/arquitectura.md#limitaciones-conocid
 > jugadores tienen que tener **la misma versión** de HKMultiplayer. Mac y Linux no son compatibles, y la versión de
 > Xbox/Game Pass no está probada.
 
-1. Consigue `HKMultiplayer-0.36.2.zip`:
-   - Si hay un paquete publicado en la página de [*Releases*](https://github.com/DarthAmk97/HKMultiplayerMOD/releases) de este fork (o si te lo pasa el host), descárgalo.
-   - Si todavía no hay ningún zip en *Releases*, compila `out/package/HKMultiplayer-0.36.2.zip` en local siguiendo [Compilar (también en otro PC)](#compilar-también-en-otro-pc) más abajo y comparte ese zip con tus amigos en `1.5.68.11808`.
-2. Cierra el juego, **descomprime el zip entero** y haz doble clic en **`HKMultiplayer Setup.exe`**.
-3. En la ventana que se abre, comprueba la carpeta del juego y pulsa **Instalar**.
+1. Descarga **`HKMultiplayer-0.36.2.zip`** desde la página de [*Releases*](https://github.com/DarthAmk97/HKMultiplayerMOD/releases), dentro de la pre-release **`v0.36.2`** *(o compílalo desde el código siguiendo [Compilar (también en otro PC)](#compilar-también-en-otro-pc))*.
+2. Cierra Hollow Knight por completo y **descomprime el zip entero** en una carpeta normal (clic derecho › *Extraer todo…* — **no** ejecutes `HKMultiplayer Setup.exe` desde dentro del `.zip`).
+3. Abre la carpeta extraída `HKMultiplayer-0.36.2` y haz doble clic en **`HKMultiplayer Setup.exe`**:
+   - Si Windows SmartScreen avisa (*"Windows protegió tu PC"*), pulsa *Más información › Ejecutar de todas formas* (el instalador no tiene firma digital; su código está en [`tools/installer/launcher`](tools/installer/launcher)).
+   - Comprueba que la ruta apunta a tu carpeta de **Hollow Knight `1.5.68.11808`** (pulsa **Buscar…** si lo tienes en otra ruta, como `D:\Games\Hollow Knight`) y pulsa **Instalar**. *(Si Windows no te deja escribir ahí, clic derecho en `HKMultiplayer Setup.exe` › Ejecutar como administrador.)*
 4. Abre Hollow Knight (desde Steam para salas e invitaciones de Steam, o directamente si juegas por IP): en el menú principal aparece **Multijugador**.
 
-Windows puede avisar al abrir un archivo descargado de internet: pulsa *Ejecutar* (o *Más información › Ejecutar de
-todas formas*). El instalador es de código abierto: su código está en [`tools/installer/launcher`](tools/installer/launcher).
-Si prefieres no usarlo, instálalo a mano (más abajo).
+> [!TIP]
+> - Conserva la carpeta extraída (o el zip): si abres el mismo `HKMultiplayer Setup.exe` y pulsas **Desinstalar**, devuelve los archivos originales del juego desde `<juego>\HKMultiplayer-backup`.
+> - Comparte el mismo `HKMultiplayer-0.36.2.zip` con tus amigos que tengan Hollow Knight `1.5.68.11808` — todos los jugadores deben usar la misma versión de HKMultiplayer.
+> - Si prefieres no ejecutar el `.exe`, descomprime el zip y sigue **Instalar a mano** en `LEEME.txt` (`README.txt` en inglés) dentro de la carpeta.
 
 <details>
 <summary><b>Qué hace el instalador</b></summary>
