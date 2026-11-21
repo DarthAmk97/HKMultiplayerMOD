@@ -555,7 +555,8 @@ internal abstract class GameStyledMenu : MonoBehaviour {
         }
 
         HookOptions();
-        var wrapper = Instantiate(template.transform.parent.gameObject, parent.transform, false);
+        var source = HasSingleOptionWrapper(template) ? template.transform.parent.gameObject : template.gameObject;
+        var wrapper = Instantiate(source, parent.transform, false);
         wrapper.name = label;
         wrapper.SetActive(true);
         RemoveLocalization(wrapper);
@@ -563,12 +564,13 @@ internal abstract class GameStyledMenu : MonoBehaviour {
         element.preferredHeight = 72;
 
         var option = wrapper.GetComponentInChildren<MenuOptionHorizontal>(true);
-        foreach (var setting in option.GetComponents<MenuSetting>()) {
+        foreach (var setting in wrapper.GetComponentsInChildren<MenuSetting>(true)) {
             DestroyImmediate(setting);
         }
 
         option.menuSetting = null;
         option.localizeText = false;
+        option.applySettingOn = MenuOptionHorizontal.ApplyOnType.Scroll;
         option.optionList = values;
         option.selectedOptionIndex = Mathf.Clamp(index, 0, values.Length - 1);
         option.cancelAction = CancelAction.CustomCancelAction;
@@ -578,7 +580,7 @@ internal abstract class GameStyledMenu : MonoBehaviour {
         option.navigation = nav;
         option.interactable = interactable;
 
-        foreach (var text in option.GetComponentsInChildren<Text>(true)) {
+        foreach (var text in wrapper.GetComponentsInChildren<Text>(true)) {
             switch (text.name) {
                 case "Label":
                     text.text = label;
@@ -616,16 +618,27 @@ internal abstract class GameStyledMenu : MonoBehaviour {
             return _optionTemplate;
         }
 
-        var screen = UIManager.instance != null ? UIManager.instance.gameOptionsMenuScreen : null;
-        if (screen == null) {
+        var ui = UIManager.instance;
+        if (ui == null) {
             return null;
         }
 
-        _optionTemplate = screen.GetComponentsInChildren<MenuOptionHorizontal>(true)
-                              .FirstOrDefault(o => o.name == "CamShakePopupOption") ??
-                          screen.GetComponentsInChildren<MenuOptionHorizontal>(true).FirstOrDefault();
+        // Clonar solo un MenuOptionHorizontal base, nunca subclases como MenuLanguageSetting
+        // (su OnMove/OnPointerClick cambian el idioma del juego al pulsar cualquier opción)
+        var candidates = new[] { ui.gameOptionsMenuScreen, ui.videoMenuScreen }
+            .Where(s => s != null)
+            .SelectMany(s => s.GetComponentsInChildren<MenuOptionHorizontal>(true))
+            .Where(o => o.GetType() == typeof(MenuOptionHorizontal))
+            .ToList();
+
+        _optionTemplate = candidates.FirstOrDefault(o => o.name == "CamShakePopupOption") ??
+                          candidates.FirstOrDefault(HasSingleOptionWrapper) ??
+                          candidates.FirstOrDefault();
         return _optionTemplate;
     }
+
+    private static bool HasSingleOptionWrapper(MenuOptionHorizontal option) =>
+        option.transform.parent != null && option.transform.parent.GetComponentsInChildren<MenuOptionHorizontal>(true).Length == 1;
 
     private static void HookOptions() {
         if (_optionHooked) {
