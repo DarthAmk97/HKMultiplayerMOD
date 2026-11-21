@@ -304,6 +304,7 @@ Más detalle en [docs/arquitectura.md](docs/arquitectura.md#limitaciones-conocid
 > [!TIP]
 > - Conserva la carpeta extraída (o el zip): si abres el mismo `HKMultiplayer Setup.exe` y pulsas **Desinstalar**, devuelve los archivos originales del juego desde `<juego>\HKMultiplayer-backup`.
 > - Comparte el mismo `HKMultiplayer-0.36.2.zip` con tus amigos que tengan Hollow Knight `1.5.68.11808` — todos los jugadores deben usar la misma versión de HKMultiplayer.
+> - **¿Quieres que cada uno se vea distinto?** Descarga **`HKMultiplayer-Skins-Pack.zip`** en la [release `v0.36.2`](https://github.com/DarthAmk97/HKMultiplayerMOD/releases/tag/v0.36.2), descomprímelo y coloca la carpeta `Skins` dentro de `<carpeta de Hollow Knight>\hollow_knight_Data\Managed\Mods\HKMultiplayer\` (o abre **Pausa › Multijugador › Skin y sonido › Abrir la carpeta de skins** en el juego y pega ahí dentro las carpetas de las skins). La ruta final debe quedar como `...\Mods\HKMultiplayer\Skins\<NombreSkin>\Knight.png` (no `Skins\Skins\...`).
 > - Si prefieres no ejecutar el `.exe`, descomprime el zip y sigue **Instalar a mano** en `LEEME.txt` (`README.txt` en inglés) dentro de la carpeta.
 
 <details>
