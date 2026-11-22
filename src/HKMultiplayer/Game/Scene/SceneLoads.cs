@@ -18,6 +18,9 @@ internal static class SceneLoads {
     /// <summary>Cuántas partes se han cargado aparte desde que empezó el juego.</summary>
     private static int _version;
 
+    /// <summary>Versión actual de cargas aditivas (aumenta cada vez que termina de cargarse una parte aparte).</summary>
+    public static int Version => _version;
+
     public static void Install() {
         if (_installed) {
             return;

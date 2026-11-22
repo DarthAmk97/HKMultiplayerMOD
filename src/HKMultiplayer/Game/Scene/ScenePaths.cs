@@ -15,6 +15,7 @@ namespace HKMultiplayer.Game.Scene;
 /// </summary>
 internal static class ScenePaths {
     private static readonly StringBuilder Path = new();
+    private static readonly List<Transform> Chain = new();
 
     /// <summary>Huella de cada objeto apuntada al cargarse su sala.</summary>
     private static readonly Dictionary<Transform, uint> Stable = new();
@@ -67,12 +68,19 @@ internal static class ScenePaths {
     }
 
     public static uint Hash(Transform transform) {
-        Path.Length = 0;
+        Chain.Clear();
         for (var t = transform; t != null; t = t.parent) {
-            Path.Insert(0, t.GetSiblingIndex()).Insert(0, '#').Insert(0, t.name).Insert(0, '/');
+            Chain.Add(t);
         }
 
-        Path.Insert(0, transform.gameObject.scene.name);
+        Path.Length = 0;
+        Path.Append(transform.gameObject.scene.name);
+        for (var i = Chain.Count - 1; i >= 0; i--) {
+            var t = Chain[i];
+            Path.Append('/').Append(t.name).Append('#').Append(t.GetSiblingIndex());
+        }
+
+        Chain.Clear();
         var hash = 2166136261u;
         for (var i = 0; i < Path.Length; i++) {
             hash = (hash ^ Path[i]) * 16777619u;

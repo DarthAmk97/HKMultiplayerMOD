@@ -709,6 +709,9 @@ internal sealed class EnemySync {
 
         /// <summary>En el PC que lo mueve: el último estado enviado tenía efectos continuos (al salir hay que avisar).</summary>
         public bool Running;
+
+        public int LastSentFrame = -1;
+        public int LastSentState = -1;
     }
 
     /// <summary>En una marioneta: los efectos continuos del estado en el que está su FSM en el PC que la mueve.</summary>
@@ -2280,11 +2283,14 @@ internal sealed class EnemySync {
         }
 
         var states = enemy.Fsms[i].FsmStates;
+        var onRoot = enemy.Fsms[i].gameObject == enemy.Root;
         bool[] soundStates = null;
         HutongGames.PlayMaker.FsmStateAction[][] continuous = null;
         for (var s = 0; s < states.Length; s++) {
             foreach (var action in states[s].Actions) {
-                if (IsEffectAction(action)) {
+                if (action != null && action.Enabled &&
+                    (IsEffectAction(action) && CouldRunEffect(onRoot, action) ||
+                     action is HutongGames.PlayMaker.Actions.SetParent { parent.Value: null })) {
                     soundStates ??= new bool[states.Length];
                     soundStates[s] = true;
                     break;
@@ -2417,6 +2423,46 @@ internal sealed class EnemySync {
         return name.IndexOf("Audio", StringComparison.Ordinal) >= 0 || name.IndexOf("Sound", StringComparison.Ordinal) >= 0 ||
                name.IndexOf("Music", StringComparison.Ordinal) >= 0 || EffectActions.Contains(name) || IsAreaTitleAction(action) ||
                IsHeroRespawnAction(action);
+    }
+
+    /// <summary>
+    /// Descarta al registrar la FSM las acciones que <see cref="ShouldRunEffect"/> rechazaría siempre en la marioneta
+    /// (como <c>SetPosition</c> sobre el propio enemigo al teletransportarse o <c>SendEventByName</c> a sí mismo), para
+    /// no enviar mensajes fiables <see cref="EnemySound"/> inútiles en cada teletransporte.
+    /// </summary>
+    private static bool CouldRunEffect(bool onRoot, HutongGames.PlayMaker.FsmStateAction action) {
+        switch (action) {
+            case HutongGames.PlayMaker.Actions.SetPosition setPosition:
+                return setPosition.gameObject != null &&
+                       (!onRoot || setPosition.gameObject.OwnerOption != HutongGames.PlayMaker.OwnerDefaultOption.UseOwner);
+            case HutongGames.PlayMaker.Actions.SendEventByName send:
+                return send.eventTarget != null &&
+                       send.eventTarget.target != HutongGames.PlayMaker.FsmEventTarget.EventTarget.Self;
+            case SetStaticVariable staticVariable:
+                return staticVariable.variableName?.Value == CinematicEndingVariable;
+            case global::SendEventToRegister register:
+                return register.eventName?.Value != null && EffectRegisterEvents.Contains(register.eventName.Value);
+            case HutongGames.PlayMaker.Actions.iTweenMoveTo moveTo:
+                return moveTo.gameObject != null &&
+                       (!onRoot || moveTo.gameObject.OwnerOption != HutongGames.PlayMaker.OwnerDefaultOption.UseOwner);
+            case HutongGames.PlayMaker.Actions.iTweenMoveBy moveBy:
+                return moveBy.gameObject != null &&
+                       (!onRoot || moveBy.gameObject.OwnerOption != HutongGames.PlayMaker.OwnerDefaultOption.UseOwner);
+            case HutongGames.PlayMaker.Actions.CreateObject create:
+                return create.gameObject?.Value != null && !IsGameplay(create.gameObject.Value);
+            case HutongGames.PlayMaker.Actions.FlingObjectsFromGlobalPool fling:
+                return fling.gameObject?.Value != null && !IsGeo(fling.gameObject.Value) && !IsGameplay(fling.gameObject.Value);
+            case HutongGames.PlayMaker.Actions.FlingObjectsFromGlobalPoolVel flingVel:
+                return flingVel.gameObject?.Value != null && !IsGeo(flingVel.gameObject.Value) &&
+                       !IsGameplay(flingVel.gameObject.Value);
+            case HutongGames.PlayMaker.Actions.SpawnRandomObjects random:
+                return random.gameObject?.Value != null && !IsGeo(random.gameObject.Value);
+            case HutongGames.PlayMaker.Actions.SpawnRandomObjectsOverTime overTime:
+                return overTime.gameObject?.Value != null && !IsGeo(overTime.gameObject.Value) &&
+                       !IsGameplay(overTime.gameObject.Value);
+            default:
+                return true;
+        }
     }
 
     /// <summary>
@@ -2695,6 +2741,14 @@ internal sealed class EnemySync {
         if (!sound.SoundStates[index] && !stopping || !OthersInScene()) {
             return;
         }
+
+        var frame = Time.frameCount;
+        if (!stopping && sound.LastSentFrame == frame && sound.LastSentState == index) {
+            return;
+        }
+
+        sound.LastSentFrame = frame;
+        sound.LastSentState = index;
 
         // Lo creado antes llega antes que los efectos de este estado (que pueden actuar sobre ello), como en el original
         FlushSpawns();
@@ -4713,13 +4767,19 @@ internal sealed class EnemySync {
             case ObjectKind.Hero:
                 return HeroController.instance != null ? HeroController.instance.gameObject : null;
             case ObjectKind.Own:
-                foreach (var child in enemy.Root.GetComponentsInChildren<Transform>(true)) {
-                    if (OwnPath(enemy.Transform, child) == reference.Path) {
-                        return child.gameObject;
+                ResolveChildrenScratch.Clear();
+                try {
+                    enemy.Root.GetComponentsInChildren(true, ResolveChildrenScratch);
+                    foreach (var child in ResolveChildrenScratch) {
+                        if (OwnPath(enemy.Transform, child) == reference.Path) {
+                            return child.gameObject;
+                        }
                     }
-                }
 
-                return null;
+                    return null;
+                } finally {
+                    ResolveChildrenScratch.Clear();
+                }
             case ObjectKind.Scene:
                 return FindScenePath(reference.Path);
             default:
@@ -4730,35 +4790,52 @@ internal sealed class EnemySync {
     /// <summary>Objetos de la sala por la huella de su ruta (ver <see cref="FindScenePath"/>), de la sala de <see cref="_scenePathsOf"/>.</summary>
     private static readonly Dictionary<uint, GameObject> ScenePathTable = new();
 
+    private static readonly List<Transform> ResolveChildrenScratch = new();
+    private static readonly List<GameObject> SceneRootsScratch = new();
+    private static readonly List<Transform> SceneTransformsScratch = new();
     private static string _scenePathsOf;
-
-    private static float _scenePathsAt;
+    private static int _scenePathsLoadVersion = -1;
+    private static int _scenePathsSceneCount = -1;
 
     /// <summary>
-    /// El objeto de la sala con esa ruta. Recorrer la sala es caro: se hace una tabla la primera vez y se rehace si no
-    /// está (lo que se carga después, como la parte del jefe) como mucho una vez por segundo.
+    /// El objeto de la sala con esa ruta. Recorrer la sala es caro: se hace una tabla solo cuando cambia la escena o se
+    /// termina de cargar una parte aditiva (sin reconstruir toda la tabla por objetos dinámicos no encontrados).
     /// </summary>
     private static GameObject FindScenePath(uint path) {
-        var scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
-        if (_scenePathsOf == scene && ScenePathTable.TryGetValue(path, out var known) && known != null) {
-            return known;
-        }
+        var scene = UnitySceneManager.GetActiveScene().name;
+        var version = SceneLoads.Version;
+        var sceneCount = UnitySceneManager.sceneCount;
+        if (_scenePathsOf != scene || _scenePathsLoadVersion != version || _scenePathsSceneCount != sceneCount) {
+            _scenePathsOf = scene;
+            _scenePathsLoadVersion = version;
+            _scenePathsSceneCount = sceneCount;
+            ScenePathTable.Clear();
+            for (var s = 0; s < sceneCount; s++) {
+                var loaded = UnitySceneManager.GetSceneAt(s);
+                if (!loaded.isLoaded || loaded.buildIndex < 0) {
+                    continue;
+                }
 
-        var now = Time.unscaledTime;
-        if (_scenePathsOf == scene && now - _scenePathsAt < 1f) {
-            return null;
-        }
+                SceneRootsScratch.Clear();
+                loaded.GetRootGameObjects(SceneRootsScratch);
+                foreach (var root in SceneRootsScratch) {
+                    if (root == null) {
+                        continue;
+                    }
 
-        _scenePathsOf = scene;
-        _scenePathsAt = now;
-        ScenePathTable.Clear();
-        foreach (var candidate in UnityEngine.Object.FindObjectsOfType<Transform>(true)) {
-            if (candidate.gameObject.scene.buildIndex >= 0) {
-                ScenePathTable[ScenePaths.StableHash(candidate)] = candidate.gameObject;
+                    SceneTransformsScratch.Clear();
+                    root.GetComponentsInChildren(true, SceneTransformsScratch);
+                    foreach (var candidate in SceneTransformsScratch) {
+                        ScenePathTable[ScenePaths.StableHash(candidate)] = candidate.gameObject;
+                    }
+                }
             }
+
+            SceneRootsScratch.Clear();
+            SceneTransformsScratch.Clear();
         }
 
-        return ScenePathTable.TryGetValue(path, out var found) ? found : null;
+        return ScenePathTable.TryGetValue(path, out var found) && found != null ? found : null;
     }
 
     /// <summary>Huella de la ruta de una pieza dentro del enemigo (0: el propio enemigo).</summary>
