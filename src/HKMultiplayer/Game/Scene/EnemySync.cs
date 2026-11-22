@@ -123,6 +123,12 @@ internal sealed class EnemySync {
     /// <summary>Tiempo sin noticias de quien mueve la copia de un proyectil para quitarla (ver <see cref="CopyAbandoned"/>).</summary>
     private const float CopySilentSeconds = 3f;
 
+    /// <summary>Copias activas del pool por prefab de proyectil: si un atasco acumula avisos, se recicla la más vieja.</summary>
+    private const int MaxPooledPuppetSpawnsPerPrefab = 16;
+
+    /// <summary>Efectos visuales del pool del mismo creador y prefab aceptados en un mismo frame (evita picos tras un corte de red).</summary>
+    private const int MaxVisualSpawnsPerFrame = 12;
+
     /// <summary>Hasta dónde se busca la pared de un `Climber` al retomarlo (ver <see cref="PlaceClimber"/>).</summary>
     private const float ClimberAttachRadius = 2.5f;
 
@@ -188,7 +194,7 @@ internal sealed class EnemySync {
     /// <summary>Tiempo mínimo entre cambios de quién mueve un enemigo (más en los jefes: cada cambio corta su ataque).</summary>
     private const float SwitchInterval = 5f;
 
-    private const float BossSwitchInterval = 8f;
+    private const float BossSwitchInterval = 14f;
 
     /// <summary>
     /// Un jefe solo cambia de PC entre dos ataques: en un estado de reposo de su lógica ("Idle", "Move Choice"...). Si
@@ -196,6 +202,9 @@ internal sealed class EnemySync {
     /// se cortaba. Si no llega a reposar en este tiempo, cambia igualmente.
     /// </summary>
     private const float MaxCalmWait = 4f;
+
+    /// <summary>Espera máxima a que repose un jefe que sí tiene estados de reposo (evita cortarle ataques largos como los del Maestro de Almas).</summary>
+    private const float BossCalmWait = 12f;
 
     /// <summary>
     /// Tras salir de un estado de reposo, cuánto sigue contando como en reposo: los de elegir ataque ("Move Choice") duran
@@ -329,6 +338,9 @@ internal sealed class EnemySync {
         public bool Spawned;
 
         public bool Pooled;
+
+        /// <summary>Prefab del que salió esta copia del pool (para limitar copias acumuladas durante cortes de red).</summary>
+        public GameObject SpawnPrefab;
 
         /// <summary>Enemigo de jaula fuera de ella (null si no lo es): al volver a su jaula desaparece como lo creado.</summary>
         public CagedEnemy Caged;
@@ -742,6 +754,8 @@ internal sealed class EnemySync {
 
     private readonly PendingSpawn[] _pendingSpawns = new PendingSpawn[MaxPendingSpawns];
     private int _pendingSpawnCount;
+    private int _visualSpawnFrame = -1;
+    private readonly Dictionary<(uint CreatorId, GameObject Prefab), int> _visualSpawnsInFrame = new();
 
     /// <summary>FSM de lo creado cuyos números viajan con ello (las primeras).</summary>
     private const int MaxSpawnFsms = 4;
@@ -982,6 +996,8 @@ internal sealed class EnemySync {
 
     private void Clear() {
         ClearPendingSpawns();
+        _visualSpawnsInFrame.Clear();
+        _visualSpawnFrame = -1;
         RemoveSpawnedCopies();
         _enemies.Clear();
         _byId.Clear();
@@ -1010,6 +1026,8 @@ internal sealed class EnemySync {
         if (scene != _scene) {
             var hash = PlayerSnapshot.HashScene(scene);
             ClearPendingSpawns();
+            _visualSpawnsInFrame.Clear();
+            _visualSpawnFrame = -1;
             RemoveSpawnedCopies();
             _enemies.Clear();
             _byId.Clear();
@@ -3089,6 +3107,10 @@ internal sealed class EnemySync {
 
     private readonly List<Enemy> _childScratch = new();
 
+    /// <summary>Si la conexión de ese jugador lleva varios segundos sin responder (solo visible en el host).</summary>
+    private bool IsStalled(ushort playerId) =>
+        _session.TryGetPlayer(playerId, out var player) && player.Connection is { SilenceReported: true };
+
     /// <summary>
     /// A qué PC pasa el enemigo (0: se queda con el de ahora): el del jugador más cercano, con preferencia por los que
     /// están en su zona de alerta, sin cambiar a cada momento y un jefe solo entre dos ataques. Con
@@ -3096,6 +3118,7 @@ internal sealed class EnemySync {
     /// </summary>
     private ushort PickController(Enemy enemy, ushort current, HashSet<ushort> holders, float now) {
         var currentDown = Features.PartyState.IsInactive(current);
+        var currentStalled = !currentDown && IsStalled(current);
         var position = enemy.Transform.position;
         var moving = MovingFast(enemy, position, now);
         var boss = enemy.Health.hp >= BossHp;
@@ -3114,7 +3137,7 @@ internal sealed class EnemySync {
 
         var currentOutside = currentHidden && now - enemy.HiddenSince >= HiddenSwitchSeconds;
         var interval = boss ? BossSwitchInterval : SwitchInterval;
-        if ((now - enemy.LastSwitch < interval || moving) && !currentDown && !currentOutside) {
+        if ((now - enemy.LastSwitch < interval || moving) && !currentDown && !currentOutside && !currentStalled) {
             return 0;
         }
 
@@ -3129,13 +3152,14 @@ internal sealed class EnemySync {
             currentInZone = InZone(zone, currentPosition);
         }
 
-        // Tapado del todo, quien lo mueve no cuenta frente a uno a la vista
-        if (currentOutside) {
+        // Tapado del todo o con la red cortada, quien lo mueve no cuenta frente a uno a la vista y conectado
+        if (currentOutside || currentStalled) {
             currentDistance = float.MaxValue;
             currentInZone = false;
         }
 
         var nearest = current;
+        var nearestHealthy = !currentDown && !currentOutside && !currentStalled;
         var nearestDistance = currentDistance;
         var nearestInZone = currentInZone;
         foreach (var player in _session.Players) {
@@ -3158,10 +3182,17 @@ internal sealed class EnemySync {
                 continue;
             }
 
+            var healthy = !IsStalled(player.Id);
+            if (!healthy && !currentDown && !currentOutside) {
+                continue;
+            }
+
             var distance = Vector2.Distance(position, playerPosition);
             var inZone = InZone(zone, playerPosition);
-            if (inZone && !nearestInZone || inZone == nearestInZone && distance < nearestDistance) {
+            if (healthy && !nearestHealthy ||
+                healthy == nearestHealthy && (inZone && !nearestInZone || inZone == nearestInZone && distance < nearestDistance)) {
                 nearest = player.Id;
+                nearestHealthy = healthy;
                 nearestDistance = distance;
                 nearestInZone = inZone;
             }
@@ -3171,23 +3202,26 @@ internal sealed class EnemySync {
         // de su caballero y quedaba más cerca del otro, pasaba a él, volaba hacia ese y volvía a quedar más cerca del
         // primero; cada cambio lo hacía esperar otra vez para atacar y se quedaba en el aire
         var margin = zone != null && currentInZone && nearestInZone ? ZoneSwitchMargin : SwitchMargin;
-        if (nearest != current && (currentDown || currentOutside || nearestInZone && !currentInZone ||
-                                   currentDistance - nearestDistance > margin)) {
+        if (nearest != current && (currentDown || currentOutside || currentStalled && nearestHealthy ||
+                                   nearestInZone && !currentInZone || currentDistance - nearestDistance > margin)) {
             if (currentOutside) {
                 Log.Info($"{enemy.Root.name}: quien lo mueve lleva {HiddenSwitchSeconds:0} s tapado por el terreno, pasa a {nearest}");
+            } else if (currentStalled) {
+                Log.Info($"{enemy.Root.name}: la red de {current} no responde, pasa a {nearest}");
             }
 
-            // Un jefe espera a acabar su ataque (salvo si quien lo mueve ya no juega)
-            if (!currentDown && enemy.Health.hp >= BossHp && !IsCalm(enemy, current)) {
+            // Un jefe espera a acabar su ataque (salvo si quien lo mueve ya no juega o dejó de responder)
+            if (!currentDown && !currentStalled && boss && !IsCalm(enemy, current)) {
                 if (enemy.SwitchWantedSince <= 0f) {
                     enemy.SwitchWantedSince = now;
                 }
 
-                if (now - enemy.SwitchWantedSince < MaxCalmWait) {
+                var calmWait = !currentOutside && CalmFsmOf(enemy) >= 0 ? BossCalmWait : MaxCalmWait;
+                if (now - enemy.SwitchWantedSince < calmWait) {
                     return 0;
                 }
 
-                Log.Info($"{enemy.Root.name}: no reposó en {MaxCalmWait} s, pasa a otro PC a mitad de su ataque");
+                Log.Info($"{enemy.Root.name}: no reposó en {calmWait:0} s, pasa a otro PC a mitad de su ataque");
             }
 
             enemy.SwitchWantedSince = 0f;
@@ -5137,7 +5171,7 @@ internal sealed class EnemySync {
         spawned.GetComponent<HealthManager>() != null || spawned.GetComponentInChildren<DamageHero>(true) != null ||
         spawned.GetComponent<EnemySpawner>() != null;
 
-    private Enemy Track(GameObject root, uint id, bool pooled, bool puppet, ushort controller) {
+    private Enemy Track(GameObject root, uint id, bool pooled, bool puppet, ushort controller, GameObject spawnPrefab = null) {
         var health = root.GetComponent<HealthManager>();
         var enemy = new Enemy {
             Id = id,
@@ -5152,6 +5186,8 @@ internal sealed class EnemySync {
             LastHp = health != null ? health.hp : 0,
             Spawned = true,
             Pooled = pooled,
+            SpawnPrefab = spawnPrefab,
+            LinkedResolved = health == null,
             Controller = controller,
             ScannedAt = Time.unscaledTime
         };
@@ -5285,6 +5321,44 @@ internal sealed class EnemySync {
             RemoveSpawned(previous);
         }
 
+        // Si un corte de red descarga de golpe decenas de avisos visuales del mismo pool en un frame, se limita el pico
+        if (id == 0 && pooled) {
+            var frame = Time.frameCount;
+            if (frame != _visualSpawnFrame) {
+                _visualSpawnFrame = frame;
+                _visualSpawnsInFrame.Clear();
+            }
+
+            var key = (creatorId, prefab);
+            _visualSpawnsInFrame.TryGetValue(key, out var seen);
+            if (seen >= MaxVisualSpawnsPerFrame) {
+                return;
+            }
+
+            _visualSpawnsInFrame[key] = seen + 1;
+        }
+
+        // Proyectiles del pool acumulados porque su EnemyDespawn llegó tarde: se recicla el más viejo para reusarlo sin Instantiate
+        if (id != 0 && pooled && prefab.GetComponent<HealthManager>() == null) {
+            Enemy oldest = null;
+            var activeCopies = 0;
+            foreach (var existing in _enemies) {
+                if (!existing.Spawned || !existing.Pooled || !existing.Puppet || existing.Health != null ||
+                    existing.SpawnPrefab != prefab) {
+                    continue;
+                }
+
+                activeCopies++;
+                if (oldest == null || existing.ScannedAt < oldest.ScannedAt) {
+                    oldest = existing;
+                }
+            }
+
+            if (activeCopies >= MaxPooledPuppetSpawnsPerPrefab && oldest != null) {
+                RemoveSpawned(oldest);
+            }
+        }
+
         // Se crea a la altura de la marioneta (la z del original puede no ser la de este PC)
         position.z = creator.Transform.position.z;
         GameObject copy;
@@ -5323,7 +5397,7 @@ internal sealed class EnemySync {
 
         // Solo visual: corre solo. De juego: copia que sigue al original (daña al tocarla; los golpes van al dueño)
         if (id != 0) {
-            Track(copy, id, pooled, puppet: true, from.Id);
+            Track(copy, id, pooled, puppet: true, from.Id, prefab);
         } else if (velocity.sqrMagnitude is > 0f and < float.PositiveInfinity && copy.TryGetComponent<Rigidbody2D>(out var body)) {
             // Su velocidad se la da otra acción al salir, que aquí no se repite. El cristal del Crystal Flyer daña con una
             // FSM (`damages_hero`) y no con `DamageHero`, así que cuenta como visual: sin velocidad se quedaba en el aire,
