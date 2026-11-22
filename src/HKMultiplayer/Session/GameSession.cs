@@ -137,7 +137,7 @@ public sealed class GameSession : INetListener, IDisposable {
 
     /// <summary>Hostea: el servidor escucha en el transporte dado y el jugador local (id 1) queda dentro.</summary>
     public static GameSession Host(ITransport transport, string roomCode, string localName, string scene,
-        string version, Action<string> log, int maxPlayers = 4) =>
+        string version, Action<string> log, int maxPlayers = 6) =>
         new(transport, roomCode, localName, scene, version, log, maxPlayers);
 
     /// <summary>Se une a una partida. El resultado llega por <see cref="Connected"/> o <see cref="Disconnected"/>.</summary>

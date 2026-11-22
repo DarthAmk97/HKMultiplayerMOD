@@ -35,7 +35,7 @@ Rick Knight (con su HUD). Hollow Knight es de Team Cherry.</sub>
 
 Un jugador **hostea** un mundo coop y sus compañeros **se unen** por **Steam** (con una invitación o con *Unirse a la
 partida*, sin abrir puertos) o con la dirección del host y el código de la partida:
-comparten el mundo, se ven en tiempo real y pelean juntos contra los mismos enemigos y jefes. Hasta 4 jugadores,
+comparten el mundo, se ven en tiempo real y pelean juntos contra los mismos enemigos y jefes. Hasta 6 jugadores,
 escrito desde cero sobre la Modding API de Hollow Knight.
 
 ## Índice
@@ -55,7 +55,7 @@ escrito desde cero sobre la Modding API de Hollow Knight.
 
 ## ✨ Funciones
 
-- 🎮 **El juego entero y sus DLC, con hasta 4 jugadores**: la historia hasta todos sus finales, Hidden Dreams, The Grimm
+- 🎮 **El juego entero y sus DLC, con hasta 6 jugadores**: la historia hasta todos sus finales, Hidden Dreams, The Grimm
   Troupe, Lifeblood y Godmaster, con sus Panteones jugados juntos hasta el Panteón de Hallownest.
 - 🌍 **Mundos coop**: hasta 4 mundos propios, guardados en el PC del host, aparte de tus partidas normales.
 - 🔒 **Conexión**: por **Steam** (invitar y *Unirse a la partida*, sin abrir puertos) o por **IP** (red local o
@@ -182,7 +182,7 @@ escrito desde cero sobre la Modding API de Hollow Knight.
 - **El botín cae en el mismo sitio** en todos los PCs: el geo de los enemigos, de las rocas y de los cofres.
 - **Viaje en ciervo juntos** (opción del host): cuando uno elige destino, los compañeros que están cerca de él en la
   estación viajan con él.
-- **Bancos compartidos**: hasta 4 jugadores sentados uno al lado del otro en el mismo banco, nunca dentro de la
+- **Bancos compartidos**: hasta 6 jugadores sentados uno al lado del otro en el mismo banco, nunca dentro de la
   pared.
 - **Avisos de versión**: en el menú principal sale un aviso si hay una versión nueva (y *Multijugador* ofrece
   descargarla) o si el mod se acaba de actualizar (con sus novedades). Es una consulta a la lista pública de versiones

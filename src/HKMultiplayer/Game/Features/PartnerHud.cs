@@ -20,9 +20,9 @@ namespace HKMultiplayer.Game.Features;
 /// Todo se crea al principio; cada frame solo se mueve y se enciende o apaga, y los textos se rehacen solo al cambiar.
 /// </summary>
 internal sealed class PartnerHud {
-    private const int MaxPartners = 3;
+    private const int MaxPartners = 5;
     private const int MaxMasks = 20;
-    private const int MaxArrows = 6;
+    private const int MaxArrows = 10;
 
     /// <summary>Lo que se ven sus máscaras sobre su cabeza tras cambiarle la vida.</summary>
     private const float OverheadSeconds = 3f;

@@ -252,7 +252,8 @@ internal abstract class GameStyledMenu : MonoBehaviour {
     // Piezas
     // =====================================================================================================
 
-    protected MenuButton AddButton(GameObject parent, string text, Action action, int fontSize = 0, float width = 0) {
+    protected MenuButton AddButton(GameObject parent, string text, Action action, int fontSize = 0, float width = 0,
+        float height = 84) {
         var buttonObject = Instantiate(_buttonTemplate, parent.transform, false);
         buttonObject.name = text;
         buttonObject.SetActive(true);
@@ -268,7 +269,7 @@ internal abstract class GameStyledMenu : MonoBehaviour {
         }
 
         var element = buttonObject.AddComponent<LayoutElement>();
-        element.preferredHeight = 84;
+        element.preferredHeight = height;
         if (width > 0) {
             element.preferredWidth = width;
         }

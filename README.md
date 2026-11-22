@@ -35,7 +35,7 @@ Knight skin (with its HUD). Hollow Knight belongs to Team Cherry.</sub>
 
 One player **hosts** a coop world and their friends **join** through **Steam** (with an invite or *Join Game*, no
 port forwarding) or with the host's address and the game code: you share the world, see each other in real time and
-fight the same enemies and bosses together. Up to 4 players, written from scratch on top of the Hollow Knight Modding
+fight the same enemies and bosses together. Up to 6 players, written from scratch on top of the Hollow Knight Modding
 API.
 
 ## Contents
@@ -55,7 +55,7 @@ API.
 
 ## ✨ Features
 
-- 🎮 **The whole game and its DLCs, with up to 4 players**: the story to every ending, Hidden Dreams, The Grimm Troupe,
+- 🎮 **The whole game and its DLCs, with up to 6 players**: the story to every ending, Hidden Dreams, The Grimm Troupe,
   Lifeblood and Godmaster, with its Pantheons played together up to the Pantheon of Hallownest.
 - 🌍 **Coop worlds**: up to 4 worlds of your own, saved on the host's PC, separate from your normal saves.
 - 🔒 **Connection**: through **Steam** (invites and *Join Game*, no port forwarding) or by **IP** (local network or
@@ -181,7 +181,7 @@ API.
 - **Loot lands in the same place** on every PC: geo from enemies, geo rocks and chests.
 - **Stag travel together** (host option): when one player picks a destination, partners standing near them at that
   station ride along.
-- **Shared benches**: up to 4 players sit side by side on the same bench, never inside a wall.
+- **Shared benches**: up to 6 players sit side by side on the same bench, never inside a wall.
 - **Version notices**: the main menu tells you when a new version is out (and *Multiplayer* offers to download it)
   or when the mod was just updated (with what's new). It is one request to GitHub's public release list when the game
   starts; turn it off in *Multiplayer › Check for updates*.

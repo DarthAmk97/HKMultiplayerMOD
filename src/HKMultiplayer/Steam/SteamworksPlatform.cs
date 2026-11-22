@@ -20,7 +20,7 @@ internal sealed class SteamworksPlatform : ISteamPlatform {
     private const uint HollowKnightAppId = 367520;
 
     private const int Channel = 0;
-    private const int MaxLobbyMembers = 4;
+    private const int MaxLobbyMembers = 6;
 
     /// <summary>Búfer fijo reutilizable para enviar sin crear memoria cuando offset != 0.</summary>
     private readonly byte[] _sendBuffer = new byte[NetConstants.MaxDatagramSize];

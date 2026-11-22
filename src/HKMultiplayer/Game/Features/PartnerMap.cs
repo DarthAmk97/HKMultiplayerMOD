@@ -36,7 +36,8 @@ internal sealed class PartnerMap {
     /// misma brújula azul y sin nombre: con 3 o más no se sabía quién era quién.
     /// </summary>
     private static readonly Color[] StandingColors = {
-        new(0.45f, 0.8f, 1f, 1f), new(0.5f, 1f, 0.55f, 1f), new(1f, 0.85f, 0.35f, 1f), new(0.85f, 0.6f, 1f, 1f)
+        new(0.45f, 0.8f, 1f, 1f), new(0.5f, 1f, 0.55f, 1f), new(1f, 0.85f, 0.35f, 1f), new(0.85f, 0.6f, 1f, 1f),
+        new(1f, 0.58f, 0.32f, 1f), new(0.4f, 0.95f, 0.85f, 1f)
     };
 
     private static readonly Color DownedColor = new(1f, 0.35f, 0.35f, 1f);

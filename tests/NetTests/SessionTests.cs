@@ -27,6 +27,7 @@ public static partial class Program {
         Run("Sesión: mensajes al dueño y a todos", SessionOwnerAndEveryoneRouting);
         Run("Sesión: salida de un jugador avisada a todos", SessionPlayerLeft);
         Run("Sesión: versión distinta rechazada", SessionVersionMismatch);
+        Run("Sesión: admite hasta 6 jugadores y rechaza el séptimo", SessionMaxSixPlayers);
         Run("Sesión: memoria del reenvío en régimen estable", SessionRelayAllocations);
         Run("Sesión: un mensaje del invitado del tamaño máximo se reenvía y la conexión sigue", SessionRelayMaxSize);
         Run("Sesión: nombre de 24 caracteres chinos", SessionLongUnicodeName);
@@ -306,5 +307,20 @@ public static partial class Program {
         Console.Write($"[{perTick:0} bytes por tick con 3 jugadores en la misma sala, {delivered} estados entregados] ");
         Assert(delivered > ticks * 6 * 0.9, $"se perdieron estados: {delivered}");
         Assert(perTick < 2048, $"demasiada memoria por tick: {perTick:0} bytes");
+    }
+
+    private static void SessionMaxSixPlayers() {
+        var world = new World();
+        for (var i = 1; i <= 5; i++) {
+            world.JoinOrFail($"J{i}", "Town");
+        }
+
+        Assert(world.Host.Players.Count() == 6, $"esperados 6 jugadores, hay {world.Host.Players.Count()}");
+
+        var extra = world.Join("J6", "Town");
+        Assert(world.Pump(() => world.Inbox[extra].Disconnects.Count == 1, 10), "el séptimo jugador no fue rechazado");
+        Assert(world.Inbox[extra].Disconnects[0] == DisconnectReason.Full,
+            $"motivo inesperado: {world.Inbox[extra].Disconnects[0]}");
+        Assert(world.Host.Players.Count() == 6, "el séptimo jugador entró en el host");
     }
 }

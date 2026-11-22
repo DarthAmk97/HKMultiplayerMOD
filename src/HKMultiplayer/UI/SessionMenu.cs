@@ -35,7 +35,7 @@ internal sealed class SessionMenu : GameStyledMenu {
     /// </summary>
     private const int FirstPageOptions = 10;
 
-    private const int MaxPartnerRows = 3;
+    private const int MaxPartnerRows = 5;
 
     /// <summary>Cantidades de geo que se pueden dar (0 = todo).</summary>
     private static readonly int[] GeoAmounts = { 10, 50, 100, 200, 500, 0 };
@@ -210,8 +210,8 @@ internal sealed class SessionMenu : GameStyledMenu {
             () => Steam.SteamLink.Platform?.OpenInviteDialog(), 36);
         AddSpace(main, 10);
         AddText(main, Lang.T("Jugadores", "Players"), 40, title: true);
-        _players = AddText(main, string.Empty, 36);
-        _players.GetComponent<LayoutElement>().preferredHeight = 150;
+        _players = AddText(main, string.Empty, 30);
+        _players.GetComponent<LayoutElement>().preferredHeight = 220;
         _players.alignment = TextAnchor.UpperCenter;
         var pages = AddRow(main, "Páginas", 84, 10);
         AddButton(pages, Lang.T("Ajustes de la partida", "Game settings"), () => ShowPage(SettingsPage), 36, 560);
@@ -306,17 +306,17 @@ internal sealed class SessionMenu : GameStyledMenu {
         AddOption(page, Lang.T("Geo a dar", "Geo to give"), GeoLabels, _geoIndex, index => _geoIndex = index);
         for (var i = 0; i < MaxPartnerRows; i++) {
             var row = i;
-            _partnerTexts[i] = AddText(page, string.Empty, 32);
-            _partnerRows[i] = AddRow(page, $"Compañero {i + 1}", 84, 10);
-            _partnerButtons[i] = AddButton(_partnerRows[i], Lang.T("Dar geo", "Give geo"), () => GiveGeo(row), 34, 520);
-            _goToButtons[i] = AddButton(_partnerRows[i], Lang.T("Ir con", "Go to"), () => GoTo(row), 34, 520);
+            _partnerTexts[i] = AddText(page, string.Empty, 28);
+            _partnerRows[i] = AddRow(page, $"Compañero {i + 1}", 64, 10);
+            _partnerButtons[i] = AddButton(_partnerRows[i], Lang.T("Dar geo", "Give geo"), () => GiveGeo(row), 30, 520, 64);
+            _goToButtons[i] = AddButton(_partnerRows[i], Lang.T("Ir con", "Go to"), () => GoTo(row), 30, 520, 64);
         }
 
         AddSpace(page, 6);
-        var help = AddRow(page, "Ayuda", 84, 10);
-        AddButton(help, Lang.T("Desatascar", "Unstuck"), () => Resume(MultiplayerRunner.Instance.Actions.RequestUnstuck()), 36, 420);
-        AddButton(help, Lang.T("Recargar sala", "Reload room"), () => Resume(MultiplayerRunner.Instance.Actions.RequestReload()), 36, 420);
-        _partnersMessage = AddText(page, string.Empty, 30);
+        var help = AddRow(page, "Ayuda", 70, 10);
+        AddButton(help, Lang.T("Desatascar", "Unstuck"), () => Resume(MultiplayerRunner.Instance.Actions.RequestUnstuck()), 34, 420, 70);
+        AddButton(help, Lang.T("Recargar sala", "Reload room"), () => Resume(MultiplayerRunner.Instance.Actions.RequestReload()), 34, 420, 70);
+        _partnersMessage = AddText(page, string.Empty, 28);
     }
 
     private void GiveGeo(int row) {
